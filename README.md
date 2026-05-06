@@ -4,7 +4,7 @@ MoneyControl e uma plataforma de controle financeiro pessoal com versao web e ve
 
 ## Links
 
-- APK Android: [Baixar app-debug.apk](https://github.com/rnsribeiro/MoneyControl/releases/latest/download/app-debug.apk)
+- APK Android: [Baixar MoneyControl-v0.1.0.apk](https://github.com/rnsribeiro/MoneyControl/releases/latest/download/MoneyControl-v0.1.0.apk)
 - Configuracao do Supabase: [SUPABASE_SETUP.md](./SUPABASE_SETUP.md)
 - Guia do app Android: [android/README.md](./android/README.md)
 
