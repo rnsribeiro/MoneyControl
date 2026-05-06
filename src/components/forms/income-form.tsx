@@ -1,0 +1,243 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { MC_TABLES } from "@/lib/supabase/tables";
+import {
+  incomeSchema,
+  type IncomeFormInput,
+  type IncomeFormValues,
+} from "@/lib/validations/income.schema";
+import type { MoneyControlIncomeInsert } from "@/types/database";
+import type { CategoryOption } from "@/lib/services/categories.service";
+import { CategoryRequiredState } from "@/components/shared/category-required-state";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+
+export function IncomeForm({
+  sourceOptions,
+  initialValues,
+}: {
+  sourceOptions: CategoryOption[];
+  initialValues?: {
+    id: string;
+    title: string;
+    amount: number;
+    source: string;
+    date: string;
+    status: "received" | "expected";
+    notes?: string;
+  };
+}) {
+  const resolvedSourceOptions = sourceOptions;
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
+  const form = useForm<IncomeFormInput, unknown, IncomeFormValues>({
+    resolver: zodResolver(incomeSchema),
+    defaultValues: {
+      title: initialValues?.title ?? "",
+      amount: initialValues?.amount ?? 0,
+      source: initialValues?.source ?? resolvedSourceOptions[0]?.value ?? "",
+      date: initialValues?.date ?? new Date().toISOString().slice(0, 10),
+      status: initialValues?.status ?? "received",
+      notes: initialValues?.notes ?? "",
+    },
+  });
+
+  if (!resolvedSourceOptions.length) {
+    return <CategoryRequiredState kindLabel="receitas" />;
+  }
+
+  async function onSubmit(values: IncomeFormValues) {
+    setIsSubmitting(true);
+    const supabase = createSupabaseBrowserClient();
+
+    if (!supabase) {
+      toast.error("Supabase nao configurado.");
+      setIsSubmitting(false);
+      return;
+    }
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      toast.error("Sessao nao encontrada.", {
+        description: "Faca login para salvar suas receitas.",
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
+    const payload: MoneyControlIncomeInsert = {
+      user_id: user.id,
+      title: values.title,
+      amount: values.amount,
+      source: values.source,
+      received_at: values.date,
+      expected_date: values.date,
+      actual_received_at: values.status === "received" ? values.date : undefined,
+      status: values.status,
+      notes: values.notes,
+    };
+
+    const { error } = initialValues?.id
+      ? await supabase.from(MC_TABLES.incomes).update(payload).eq("id", initialValues.id)
+      : await supabase.from(MC_TABLES.incomes).insert(payload);
+
+    if (error) {
+      toast.error("Nao foi possivel salvar a receita.", {
+        description: error.message,
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
+    toast.success(
+      initialValues?.id ? "Receita atualizada com sucesso." : "Receita salva com sucesso.",
+      {
+        description: initialValues?.id
+          ? `"${values.title}" foi atualizada no MoneyControl.`
+          : `"${values.title}" foi adicionada ao MoneyControl.`,
+      },
+    );
+    setIsSubmitting(false);
+    form.reset({
+      title: initialValues?.title ?? "",
+      amount: initialValues?.amount ?? 0,
+      source: initialValues?.source ?? resolvedSourceOptions[0]?.value ?? "",
+      date: initialValues?.date ?? new Date().toISOString().slice(0, 10),
+      status: initialValues?.status ?? "received",
+      notes: initialValues?.notes ?? "",
+    });
+    router.push("/receitas");
+    router.refresh();
+  }
+
+  return (
+    <Card className="border-border/70 bg-white/90 shadow-sm shadow-slate-200/50">
+      <CardHeader>
+        <CardTitle className="font-heading text-2xl">Nova receita</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <div className="grid gap-5 md:grid-cols-2">
+            <Field>
+              <Label htmlFor="title">Descricao</Label>
+              <Input id="title" placeholder="Ex.: Salario mensal" {...form.register("title")} />
+              <FieldError message={form.formState.errors.title?.message} />
+            </Field>
+            <Field>
+              <Label htmlFor="amount">Valor</Label>
+              <Input
+                id="amount"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="0,00"
+                {...form.register("amount", { valueAsNumber: true })}
+              />
+              <FieldError message={form.formState.errors.amount?.message} />
+            </Field>
+            <Field>
+              <Label>Origem</Label>
+              <Controller
+                control={form.control}
+                name="source"
+                render={({ field }) => (
+                  <Select value={field.value || undefined} onValueChange={field.onChange}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione a origem" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {resolvedSourceOptions.map((source) => (
+                        <SelectItem key={source.value} value={source.value}>
+                          {source.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              <FieldError message={form.formState.errors.source?.message} />
+            </Field>
+            <Field>
+              <Label htmlFor="date">Data</Label>
+              <Input id="date" type="date" {...form.register("date")} />
+              <FieldError message={form.formState.errors.date?.message} />
+            </Field>
+            <Field>
+              <Label>Status</Label>
+              <Controller
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <Select value={field.value || undefined} onValueChange={field.onChange}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="received">Recebido</SelectItem>
+                      <SelectItem value="expected">A receber</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              <FieldError message={form.formState.errors.status?.message} />
+            </Field>
+            <Field className="md:col-span-2">
+              <Label htmlFor="notes">Observacoes</Label>
+              <Textarea
+                id="notes"
+                placeholder="Detalhes sobre a origem ou recorrencia da receita."
+                {...form.register("notes")}
+              />
+              <FieldError message={form.formState.errors.notes?.message} />
+            </Field>
+          </div>
+          <div className="flex flex-col gap-3 border-t border-border/70 pt-5 sm:flex-row">
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting
+                ? "Salvando..."
+                : initialValues?.id
+                  ? "Salvar alteracoes"
+                  : "Salvar receita"}
+            </Button>
+            <Button type="button" variant="outline" onClick={() => form.reset()}>
+              Limpar campos
+            </Button>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}
+
+function Field({
+  className,
+  children,
+}: {
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return <div className={className ? `space-y-2 ${className}` : "space-y-2"}>{children}</div>;
+}
+
+function FieldError({ message }: { message?: string }) {
+  return message ? <p className="text-sm text-destructive">{message}</p> : null;
+}

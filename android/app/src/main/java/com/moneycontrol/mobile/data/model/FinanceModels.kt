@@ -1,0 +1,215 @@
+package com.moneycontrol.mobile.data.model
+
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class ExpenseRecord(
+    val id: String,
+    val title: String,
+    val amount: Double,
+    @SerialName("category_name")
+    val categoryName: String,
+    @SerialName("expense_date")
+    val expenseDate: String,
+    @SerialName("due_date")
+    val dueDate: String,
+    @SerialName("paid_at")
+    val paidAt: String? = null,
+    @SerialName("payment_method")
+    val paymentMethod: String,
+    val status: String,
+    val notes: String? = null,
+)
+
+@Serializable
+data class IncomeRecord(
+    val id: String,
+    val title: String,
+    val amount: Double,
+    val source: String,
+    @SerialName("received_at")
+    val receivedAt: String,
+    @SerialName("expected_date")
+    val expectedDate: String,
+    @SerialName("actual_received_at")
+    val actualReceivedAt: String? = null,
+    val status: String,
+    val notes: String? = null,
+)
+
+@Serializable
+data class InvestmentRecord(
+    val id: String,
+    val name: String,
+    val type: String,
+    val amount: Double,
+    val broker: String,
+    val goal: String,
+    @SerialName("investment_date")
+    val investmentDate: String,
+    val notes: String? = null,
+)
+
+@Serializable
+data class CategoryRecord(
+    val id: String,
+    val name: String,
+    val slug: String,
+    val kind: String,
+    val color: String? = null,
+)
+
+data class DashboardSummary(
+    val totalIncome: Double = 0.0,
+    val receivedIncome: Double = 0.0,
+    val expectedIncome: Double = 0.0,
+    val totalExpenses: Double = 0.0,
+    val paidExpenses: Double = 0.0,
+    val pendingExpenses: Double = 0.0,
+    val totalInvested: Double = 0.0,
+    val balance: Double = 0.0,
+    val cashOnHand: Double = 0.0,
+    val savingsRate: Int = 0,
+)
+
+data class RecentActivity(
+    val id: String,
+    val title: String,
+    val amount: Double,
+    val date: String,
+    val category: String,
+    val type: String,
+    val status: String,
+)
+
+data class FinanceSnapshot(
+    val summary: DashboardSummary = DashboardSummary(),
+    val expenses: List<ExpenseRecord> = emptyList(),
+    val incomes: List<IncomeRecord> = emptyList(),
+    val investments: List<InvestmentRecord> = emptyList(),
+    val categories: List<CategoryRecord> = emptyList(),
+    val recentActivities: List<RecentActivity> = emptyList(),
+)
+
+enum class FinancePeriodFilter(
+    val label: String,
+) {
+    CURRENT_MONTH("Mes"),
+    CURRENT_YEAR("Ano"),
+    ALL_TIME("Tudo"),
+}
+
+@Serializable
+data class CategoryMutation(
+    val name: String,
+    val slug: String,
+    val kind: String,
+    val color: String? = null,
+)
+
+@Serializable
+data class CategoryInsert(
+    @SerialName("user_id")
+    val userId: String,
+    val name: String,
+    val slug: String,
+    val kind: String,
+    val color: String? = null,
+)
+
+@Serializable
+data class ExpenseMutation(
+    val title: String,
+    val amount: Double,
+    @SerialName("category_name")
+    val categoryName: String,
+    @SerialName("payment_method")
+    val paymentMethod: String,
+    val status: String,
+    @SerialName("expense_date")
+    val expenseDate: String,
+    @SerialName("due_date")
+    val dueDate: String,
+    @SerialName("paid_at")
+    val paidAt: String? = null,
+    val notes: String? = null,
+)
+
+@Serializable
+data class ExpenseInsert(
+    @SerialName("user_id")
+    val userId: String,
+    val title: String,
+    val amount: Double,
+    @SerialName("category_name")
+    val categoryName: String,
+    @SerialName("payment_method")
+    val paymentMethod: String,
+    val status: String,
+    @SerialName("expense_date")
+    val expenseDate: String,
+    @SerialName("due_date")
+    val dueDate: String,
+    @SerialName("paid_at")
+    val paidAt: String? = null,
+    val notes: String? = null,
+)
+
+@Serializable
+data class IncomeMutation(
+    val title: String,
+    val amount: Double,
+    val source: String,
+    @SerialName("received_at")
+    val receivedAt: String,
+    @SerialName("expected_date")
+    val expectedDate: String,
+    @SerialName("actual_received_at")
+    val actualReceivedAt: String? = null,
+    val status: String,
+    val notes: String? = null,
+)
+
+@Serializable
+data class IncomeInsert(
+    @SerialName("user_id")
+    val userId: String,
+    val title: String,
+    val amount: Double,
+    val source: String,
+    @SerialName("received_at")
+    val receivedAt: String,
+    @SerialName("expected_date")
+    val expectedDate: String,
+    @SerialName("actual_received_at")
+    val actualReceivedAt: String? = null,
+    val status: String,
+    val notes: String? = null,
+)
+
+@Serializable
+data class InvestmentMutation(
+    val name: String,
+    val type: String,
+    val amount: Double,
+    val broker: String,
+    val goal: String,
+    @SerialName("investment_date")
+    val investmentDate: String,
+    val notes: String? = null,
+)
+
+@Serializable
+data class InvestmentInsert(
+    @SerialName("user_id")
+    val userId: String,
+    val name: String,
+    val type: String,
+    val amount: Double,
+    val broker: String,
+    val goal: String,
+    @SerialName("investment_date")
+    val investmentDate: String,
+    val notes: String? = null,
+)
