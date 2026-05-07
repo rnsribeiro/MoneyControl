@@ -22,15 +22,20 @@ export async function PATCH(
   }
 
   const { id } = await context.params;
-  const { status } = (await request.json()) as { status?: "paid" | "pending" };
+  const { amount, paymentDate } = (await request.json()) as {
+    amount?: number;
+    paymentDate?: string;
+  };
 
-  if (!status) {
-    return NextResponse.json({ error: "Status inválido." }, { status: 400 });
+  const parsedAmount = Number(amount);
+
+  if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+    return NextResponse.json({ error: "Informe um valor de pagamento válido." }, { status: 400 });
   }
 
   const { data: expense, error: expenseError } = await supabase
     .from(MC_TABLES.expenses)
-    .select("amount")
+    .select("amount, paid_amount")
     .eq("id", id)
     .eq("user_id", user.id)
     .maybeSingle();
@@ -39,16 +44,19 @@ export async function PATCH(
     return NextResponse.json({ error: "Despesa não encontrada." }, { status: 404 });
   }
 
-  const amount = Number(expense.amount);
-  const payload = {
-    status,
-    paid_amount: status === "paid" ? amount : 0,
-    paid_at: status === "paid" ? getLocalDateInputValue() : null,
-  };
+  const totalAmount = Number(expense.amount);
+  const currentPaidAmount = Number(expense.paid_amount ?? 0);
+  const nextPaidAmount = Math.min(totalAmount, currentPaidAmount + parsedAmount);
+  const nextStatus =
+    nextPaidAmount >= totalAmount ? "paid" : nextPaidAmount > 0 ? "partial" : "pending";
 
   const { error } = await supabase
     .from(MC_TABLES.expenses)
-    .update(payload)
+    .update({
+      paid_amount: nextPaidAmount,
+      status: nextStatus,
+      paid_at: paymentDate || getLocalDateInputValue(),
+    })
     .eq("id", id)
     .eq("user_id", user.id);
 
@@ -56,5 +64,5 @@ export async function PATCH(
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, paidAmount: nextPaidAmount, status: nextStatus });
 }

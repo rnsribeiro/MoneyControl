@@ -9,6 +9,9 @@ import com.moneycontrol.mobile.data.model.ExpenseMutation
 import com.moneycontrol.mobile.data.model.ExpenseRecord
 import com.moneycontrol.mobile.data.model.FinancePeriodFilter
 import com.moneycontrol.mobile.data.model.FinanceSnapshot
+import com.moneycontrol.mobile.data.model.GoalMutation
+import com.moneycontrol.mobile.data.model.HistoryEntry
+import com.moneycontrol.mobile.data.model.HistoryTypeFilter
 import com.moneycontrol.mobile.data.model.IncomeMutation
 import com.moneycontrol.mobile.data.model.IncomeRecord
 import com.moneycontrol.mobile.data.model.InvestmentMutation
@@ -31,6 +34,10 @@ data class HomeUiState(
     val snapshot: FinanceSnapshot = FinanceSnapshot(),
     val selectedFilter: FinancePeriodFilter = FinancePeriodFilter.ALL_TIME,
     val selectedMonthKey: String = currentMonthKey(),
+    val historyTypeFilter: HistoryTypeFilter = HistoryTypeFilter.ALL,
+    val historySearchTerm: String = "",
+    val historyStartDate: String = "",
+    val historyEndDate: String = "",
     val loadError: String? = null,
     val feedbackMessage: String? = null,
 ) {
@@ -39,6 +46,14 @@ data class HomeUiState(
 
     val filteredSnapshot: FinanceSnapshot
         get() = snapshot.filterBy(selectedFilter, selectedMonthKey)
+
+    val historyEntries: List<HistoryEntry>
+        get() = filteredSnapshot.buildHistoryEntries().filterHistory(
+            typeFilter = historyTypeFilter,
+            searchTerm = historySearchTerm,
+            startDate = historyStartDate,
+            endDate = historyEndDate,
+        )
 }
 
 class HomeViewModel(
@@ -50,26 +65,21 @@ class HomeViewModel(
 
     fun refresh() {
         viewModelScope.launch {
-            _uiState.update {
-                it.copy(
-                    loading = true,
-                    loadError = null,
-                )
-            }
-            runCatching {
-                financeRepository.loadSnapshot()
-            }.onSuccess { snapshot ->
-                _uiState.value = _uiState.value.copy(
-                    loading = false,
-                    snapshot = snapshot,
-                    loadError = null,
-                )
-            }.onFailure {
-                _uiState.value = _uiState.value.copy(
-                    loading = false,
-                    loadError = "Não foi possível carregar os dados financeiros.",
-                )
-            }
+            _uiState.update { it.copy(loading = true, loadError = null) }
+            runCatching { financeRepository.loadSnapshot() }
+                .onSuccess { snapshot ->
+                    _uiState.value = _uiState.value.copy(
+                        loading = false,
+                        snapshot = snapshot,
+                        loadError = null,
+                    )
+                }
+                .onFailure {
+                    _uiState.value = _uiState.value.copy(
+                        loading = false,
+                        loadError = "Nao foi possivel carregar os dados financeiros.",
+                    )
+                }
         }
     }
 
@@ -95,6 +105,33 @@ class HomeViewModel(
         }
     }
 
+    fun setHistoryTypeFilter(filter: HistoryTypeFilter) {
+        _uiState.update { it.copy(historyTypeFilter = filter) }
+    }
+
+    fun setHistorySearchTerm(term: String) {
+        _uiState.update { it.copy(historySearchTerm = term) }
+    }
+
+    fun setHistoryStartDate(date: String) {
+        _uiState.update { it.copy(historyStartDate = date) }
+    }
+
+    fun setHistoryEndDate(date: String) {
+        _uiState.update { it.copy(historyEndDate = date) }
+    }
+
+    fun clearHistoryFilters() {
+        _uiState.update {
+            it.copy(
+                historyTypeFilter = HistoryTypeFilter.ALL,
+                historySearchTerm = "",
+                historyStartDate = "",
+                historyEndDate = "",
+            )
+        }
+    }
+
     fun createCategory(input: CategoryMutation) = performMutation("Categoria salva com sucesso.") {
         financeRepository.createCategory(input)
     }
@@ -104,7 +141,7 @@ class HomeViewModel(
             financeRepository.updateCategory(id, input)
         }
 
-    fun deleteCategory(id: String) = performMutation("Categoria excluída com sucesso.") {
+    fun deleteCategory(id: String) = performMutation("Categoria excluida com sucesso.") {
         financeRepository.deleteCategory(id)
     }
 
@@ -123,7 +160,13 @@ class HomeViewModel(
         financeRepository.updateExpenseStatus(id, status)
     }
 
-    fun deleteExpense(id: String) = performMutation("Despesa excluída com sucesso.") {
+    fun registerExpensePayment(id: String, amount: Double, paymentDate: String) = performMutation(
+        "Pagamento parcial registrado com sucesso.",
+    ) {
+        financeRepository.registerExpensePayment(id, amount, paymentDate)
+    }
+
+    fun deleteExpense(id: String) = performMutation("Despesa excluida com sucesso.") {
         financeRepository.deleteExpense(id)
     }
 
@@ -136,7 +179,7 @@ class HomeViewModel(
             financeRepository.updateIncome(id, input)
         }
 
-    fun deleteIncome(id: String) = performMutation("Receita excluída com sucesso.") {
+    fun deleteIncome(id: String) = performMutation("Receita excluida com sucesso.") {
         financeRepository.deleteIncome(id)
     }
 
@@ -150,8 +193,20 @@ class HomeViewModel(
             financeRepository.updateInvestment(id, input)
         }
 
-    fun deleteInvestment(id: String) = performMutation("Investimento excluído com sucesso.") {
+    fun deleteInvestment(id: String) = performMutation("Investimento excluido com sucesso.") {
         financeRepository.deleteInvestment(id)
+    }
+
+    fun createGoal(input: GoalMutation) = performMutation("Meta salva com sucesso.") {
+        financeRepository.createGoal(input)
+    }
+
+    fun updateGoal(id: String, input: GoalMutation) = performMutation("Meta atualizada com sucesso.") {
+        financeRepository.updateGoal(id, input)
+    }
+
+    fun deleteGoal(id: String) = performMutation("Meta excluida com sucesso.") {
+        financeRepository.deleteGoal(id)
     }
 
     fun consumeFeedback() {
@@ -185,7 +240,7 @@ class HomeViewModel(
             }.onFailure { error ->
                 _uiState.value = _uiState.value.copy(
                     submitting = false,
-                    feedbackMessage = error.message ?: "Não foi possível concluir a operação.",
+                    feedbackMessage = error.message ?: "Nao foi possivel concluir a operacao.",
                 )
             }
         }
@@ -197,7 +252,7 @@ private fun FinanceSnapshot.filterBy(
     selectedMonthKey: String,
 ): FinanceSnapshot {
     if (filter == FinancePeriodFilter.ALL_TIME) {
-        return copy(summary = buildSummary(expenses, incomes, investments))
+        return copy(summary = buildSummary(expenses, incomes, investments, goals))
     }
 
     val filteredExpenses = expenses.filter { expense ->
@@ -214,10 +269,11 @@ private fun FinanceSnapshot.filterBy(
     }
 
     return FinanceSnapshot(
-        summary = buildSummary(filteredExpenses, filteredIncomes, filteredInvestments),
+        summary = buildSummary(filteredExpenses, filteredIncomes, filteredInvestments, goals),
         expenses = filteredExpenses,
         incomes = filteredIncomes,
         investments = filteredInvestments,
+        goals = goals,
         categories = categories,
         recentActivities = filteredActivities.take(6),
     )
@@ -239,10 +295,99 @@ private fun FinanceSnapshot.availableMonthOptions(): List<MonthOption> {
     }
 
     return monthKeys.map { key ->
-        MonthOption(
-            key = key,
-            label = formatMonthLabel(key, locale),
-        )
+        MonthOption(key = key, label = formatMonthLabel(key, locale))
+    }
+}
+
+private fun FinanceSnapshot.buildHistoryEntries(): List<HistoryEntry> {
+    val items = buildList {
+        incomes.forEach {
+            add(
+                HistoryEntry(
+                    id = it.id,
+                    title = it.title,
+                    amount = it.amount,
+                    date = incomeFilterDate(it),
+                    category = it.source,
+                    type = "income",
+                    status = if (it.status == "received") "Recebido" else "A receber",
+                    notes = it.notes,
+                    secondaryLabel = if (it.status == "received") {
+                        "Recebido em ${incomeFilterDate(it)}"
+                    } else {
+                        "Previsto para ${it.expectedDate}"
+                    },
+                ),
+            )
+        }
+        expenses.forEach {
+            add(
+                HistoryEntry(
+                    id = it.id,
+                    title = it.title,
+                    amount = it.amount,
+                    date = it.dueDate,
+                    category = it.categoryName,
+                    type = "expense",
+                    status = expenseStatusLabel(it),
+                    notes = it.notes,
+                    secondaryLabel = "Pago ${formatCurrencyPart(it.normalizedPaidAmount)} de ${formatCurrencyPart(it.amount)}",
+                ),
+            )
+        }
+        investments.forEach {
+            add(
+                HistoryEntry(
+                    id = it.id,
+                    title = it.name,
+                    amount = it.amount,
+                    date = it.investmentDate,
+                    category = it.type,
+                    type = "investment",
+                    status = "Investido",
+                    notes = it.notes,
+                    secondaryLabel = "${it.broker} - ${it.goal}",
+                ),
+            )
+        }
+    }
+
+    return items.sortedByDescending { it.date }
+}
+
+private fun List<HistoryEntry>.filterHistory(
+    typeFilter: HistoryTypeFilter,
+    searchTerm: String,
+    startDate: String,
+    endDate: String,
+): List<HistoryEntry> {
+    val normalizedTerm = searchTerm.trim().lowercase(Locale.forLanguageTag("pt-BR"))
+    val start = parseLocalDateOrNull(startDate)
+    val end = parseLocalDateOrNull(endDate)
+    val rangeStart = if (start != null && end != null && start.isAfter(end)) end else start
+    val rangeEnd = if (start != null && end != null && start.isAfter(end)) start else end
+
+    return filter { entry ->
+        val entryDate = parseLocalDateOrNull(entry.date)
+        val matchesType = when (typeFilter) {
+            HistoryTypeFilter.ALL -> true
+            HistoryTypeFilter.INCOME -> entry.type == "income"
+            HistoryTypeFilter.EXPENSE -> entry.type == "expense"
+            HistoryTypeFilter.INVESTMENT -> entry.type == "investment"
+        }
+        val matchesTerm = if (normalizedTerm.isBlank()) {
+            true
+        } else {
+            listOf(entry.title, entry.category, entry.status, entry.notes, entry.secondaryLabel)
+                .filterNotNull()
+                .joinToString(" ")
+                .lowercase(Locale.forLanguageTag("pt-BR"))
+                .contains(normalizedTerm)
+        }
+        val matchesStart = if (rangeStart == null || entryDate == null) true else !entryDate.isBefore(rangeStart)
+        val matchesEnd = if (rangeEnd == null || entryDate == null) true else !entryDate.isAfter(rangeEnd)
+
+        matchesType && matchesTerm && matchesStart && matchesEnd
     }
 }
 
@@ -250,14 +395,16 @@ private fun buildSummary(
     expenses: List<ExpenseRecord>,
     incomes: List<IncomeRecord>,
     investments: List<InvestmentRecord>,
+    goals: List<com.moneycontrol.mobile.data.model.GoalRecord>,
 ): DashboardSummary {
     val receivedIncome = incomes.filter { it.status == "received" }.sumOf { it.amount }
     val expectedIncome = incomes.filter { it.status == "expected" }.sumOf { it.amount }
     val totalIncome = receivedIncome + expectedIncome
     val totalExpenses = expenses.sumOf { it.amount }
-    val paidExpenses = expenses.filter { it.status == "paid" }.sumOf { it.amount }
-    val pendingExpenses = expenses.filter { it.status != "paid" }.sumOf { it.amount }
+    val paidExpenses = expenses.sumOf { it.normalizedPaidAmount }
+    val pendingExpenses = expenses.sumOf { it.remainingAmount }
     val totalInvested = investments.sumOf { it.amount }
+    val goalReserved = goals.sumOf { it.currentAmount }
 
     return DashboardSummary(
         totalIncome = totalIncome,
@@ -267,6 +414,7 @@ private fun buildSummary(
         paidExpenses = paidExpenses,
         pendingExpenses = pendingExpenses,
         totalInvested = totalInvested,
+        goalReserved = goalReserved,
         balance = totalIncome - totalExpenses - totalInvested,
         cashOnHand = receivedIncome - paidExpenses - totalInvested,
         savingsRate = if (receivedIncome > 0) ((totalInvested / receivedIncome) * 100).toInt() else 0,
@@ -281,25 +429,28 @@ private fun incomeFilterDate(income: IncomeRecord): String {
     }
 }
 
+private fun expenseStatusLabel(expense: ExpenseRecord): String {
+    return when {
+        isOverdue(expense) -> "Vencida"
+        expense.remainingAmount <= 0 -> "Pago"
+        expense.normalizedPaidAmount > 0 -> "Parcial"
+        else -> "Pendente"
+    }
+}
+
 private fun dateMatches(
     value: String,
     filter: FinancePeriodFilter,
     selectedMonthKey: String,
 ): Boolean {
-    val parsedDate = runCatching { LocalDate.parse(value) }.getOrNull() ?: return false
+    val parsedDate = parseLocalDateOrNull(value) ?: return false
     val now = LocalDate.now()
 
     return when (filter) {
         FinancePeriodFilter.ALL_TIME -> true
-        FinancePeriodFilter.CURRENT_MONTH -> {
-            parsedDate.year == now.year && parsedDate.month == now.month
-        }
-        FinancePeriodFilter.CURRENT_YEAR -> {
-            parsedDate.year == now.year
-        }
-        FinancePeriodFilter.SPECIFIC_MONTH -> {
-            monthKey(value) == selectedMonthKey
-        }
+        FinancePeriodFilter.CURRENT_MONTH -> parsedDate.year == now.year && parsedDate.month == now.month
+        FinancePeriodFilter.CURRENT_YEAR -> parsedDate.year == now.year
+        FinancePeriodFilter.SPECIFIC_MONTH -> monthKey(value) == selectedMonthKey
     }
 }
 
@@ -309,18 +460,31 @@ private fun currentMonthKey(): String {
 }
 
 private fun monthKey(value: String): String {
-    val parsedDate = runCatching { LocalDate.parse(value) }.getOrNull() ?: return ""
+    val parsedDate = parseLocalDateOrNull(value) ?: return ""
     return "${parsedDate.year}-${parsedDate.monthValue.toString().padStart(2, '0')}"
 }
 
 private fun formatMonthLabel(value: String, locale: Locale): String {
-    val parsedDate = runCatching { LocalDate.parse("$value-01") }.getOrNull()
-        ?: return value
-
+    val parsedDate = parseLocalDateOrNull("$value-01") ?: return value
     val month = parsedDate.month.getDisplayName(TextStyle.FULL, locale)
         .replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }
-
     return "$month ${parsedDate.year}"
+}
+
+private fun parseLocalDateOrNull(value: String?): LocalDate? {
+    return value?.takeIf { it.isNotBlank() }?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
+}
+
+private fun isOverdue(expense: ExpenseRecord): Boolean {
+    if (expense.remainingAmount <= 0) {
+        return false
+    }
+    val dueDate = parseLocalDateOrNull(expense.dueDate) ?: return false
+    return dueDate.isBefore(LocalDate.now())
+}
+
+private fun formatCurrencyPart(value: Double): String {
+    return "R$ %.2f".format(Locale.US, value)
 }
 
 class HomeViewModelFactory(

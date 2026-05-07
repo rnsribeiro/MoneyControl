@@ -1,11 +1,15 @@
 export type TransactionType = "expense" | "income" | "investment";
-export type ExpenseStatus = "paid" | "pending" | "overdue";
+export type HistoryFilterType = "all" | TransactionType;
+export type ExpenseStatus = "paid" | "pending" | "partial" | "overdue";
 export type IncomeStatus = "received" | "expected";
 
 export interface Expense {
   id: string;
   title: string;
   amount: number;
+  paidAmount: number;
+  remainingAmount: number;
+  progressPercentage: number;
   category: string;
   date: string;
   dueDate: string;
@@ -38,6 +42,18 @@ export interface Investment {
   notes?: string;
 }
 
+export interface Goal {
+  id: string;
+  title: string;
+  targetAmount: number;
+  currentAmount: number;
+  remainingAmount: number;
+  progressPercentage: number;
+  targetDate?: string;
+  notes?: string;
+  isCompleted: boolean;
+}
+
 export interface CategoryBreakdown {
   category: string;
   total: number;
@@ -60,6 +76,7 @@ export interface DashboardSummary {
   paidExpenses: number;
   pendingExpenses: number;
   totalInvested: number;
+  goalReserved: number;
   balance: number;
   cashOnHand: number;
   savingsRate: number;
@@ -73,4 +90,16 @@ export interface RecentActivity {
   category: string;
   type: TransactionType;
   status: string;
+}
+
+export interface HistoryEntry {
+  id: string;
+  title: string;
+  amount: number;
+  date: string;
+  category: string;
+  type: TransactionType;
+  status: string;
+  notes?: string;
+  secondaryLabel?: string;
 }

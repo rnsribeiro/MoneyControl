@@ -1,4 +1,4 @@
-﻿package com.moneycontrol.mobile.ui.home
+package com.moneycontrol.mobile.ui.home
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -31,6 +31,8 @@ import com.moneycontrol.mobile.data.model.CategoryMutation
 import com.moneycontrol.mobile.data.model.CategoryRecord
 import com.moneycontrol.mobile.data.model.ExpenseMutation
 import com.moneycontrol.mobile.data.model.ExpenseRecord
+import com.moneycontrol.mobile.data.model.GoalMutation
+import com.moneycontrol.mobile.data.model.GoalRecord
 import com.moneycontrol.mobile.data.model.IncomeMutation
 import com.moneycontrol.mobile.data.model.IncomeRecord
 import com.moneycontrol.mobile.data.model.InvestmentMutation
@@ -50,6 +52,7 @@ sealed interface HomeEditor {
         val initial: InvestmentRecord? = null,
         val categories: List<CategoryRecord>,
     ) : HomeEditor
+    data class Goal(val initial: GoalRecord? = null) : HomeEditor
 }
 
 sealed interface DeleteRequest {
@@ -57,7 +60,12 @@ sealed interface DeleteRequest {
     data class Expense(val item: ExpenseRecord) : DeleteRequest
     data class Income(val item: IncomeRecord) : DeleteRequest
     data class Investment(val item: InvestmentRecord) : DeleteRequest
+    data class Goal(val item: GoalRecord) : DeleteRequest
 }
+
+data class ExpensePaymentRequest(
+    val expense: ExpenseRecord,
+)
 
 @Composable
 fun DeleteConfirmationDialog(
@@ -71,12 +79,14 @@ fun DeleteConfirmationDialog(
         is DeleteRequest.Expense -> "Excluir despesa"
         is DeleteRequest.Income -> "Excluir receita"
         is DeleteRequest.Investment -> "Excluir investimento"
+        is DeleteRequest.Goal -> "Excluir meta"
     }
     val message = when (request) {
         is DeleteRequest.Category -> "Deseja remover a categoria ${request.item.name}?"
         is DeleteRequest.Expense -> "Deseja remover a despesa ${request.item.title}?"
         is DeleteRequest.Income -> "Deseja remover a receita ${request.item.title}?"
         is DeleteRequest.Investment -> "Deseja remover o investimento ${request.item.name}?"
+        is DeleteRequest.Goal -> "Deseja remover a meta ${request.item.title}?"
     }
 
     AlertDialog(
@@ -94,6 +104,54 @@ fun DeleteConfirmationDialog(
             }
         },
     )
+}
+
+@Composable
+fun ExpensePaymentDialog(
+    request: ExpensePaymentRequest,
+    submitting: Boolean,
+    onDismiss: () -> Unit,
+    onSave: (amount: Double, paymentDate: String) -> Unit,
+) {
+    var amount by remember(request.expense.id) { mutableStateOf(request.expense.remainingAmount.toString()) }
+    var paymentDate by remember(request.expense.id) { mutableStateOf(today()) }
+    var error by remember { mutableStateOf<String?>(null) }
+
+    EditorDialog(
+        title = "Registrar pagamento",
+        submitting = submitting,
+        onDismiss = onDismiss,
+        onSave = {
+            val parsedAmount = amount.toDoubleOrNull()
+            when {
+                parsedAmount == null || parsedAmount <= 0.0 -> error = "Informe um valor valido."
+                parsedAmount > request.expense.remainingAmount -> {
+                    error = "O pagamento nao pode passar do valor restante."
+                }
+                paymentDate.isBlank() -> error = "Informe a data do pagamento."
+                else -> onSave(parsedAmount, paymentDate)
+            }
+        },
+    ) {
+        Text(
+            text = "Restam ${request.expense.remainingAmount.formatMoney()} para quitar ${request.expense.title}.",
+            style = MaterialTheme.typography.bodyMedium,
+        )
+        EditorTextField(
+            value = amount,
+            onValueChange = { amount = it; error = null },
+            label = "Valor pago agora",
+            placeholder = "0.00",
+            keyboardType = KeyboardType.Decimal,
+        )
+        EditorTextField(
+            value = paymentDate,
+            onValueChange = { paymentDate = it; error = null },
+            label = "Data do pagamento",
+            placeholder = "2026-05-07",
+        )
+        error?.let { ErrorText(it) }
+    }
 }
 
 @Composable
@@ -171,12 +229,22 @@ fun ExpenseEditorDialog(
 ) {
     var title by remember(initial) { mutableStateOf(initial?.title.orEmpty()) }
     var amount by remember(initial) { mutableStateOf(initial?.amount?.toString().orEmpty()) }
+    var paidAmount by remember(initial) { mutableStateOf(initial?.normalizedPaidAmount?.toString().orEmpty()) }
     var category by remember(initial, categories) {
         mutableStateOf(initial?.categoryName ?: categories.firstOrNull()?.name.orEmpty())
     }
     var paymentMethod by remember(initial) { mutableStateOf(initial?.paymentMethod.orEmpty()) }
     var dueDate by remember(initial) { mutableStateOf(initial?.dueDate ?: today()) }
-    var status by remember(initial) { mutableStateOf(initial?.status ?: "paid") }
+    var status by remember(initial) {
+        mutableStateOf(
+            when {
+                initial == null -> "paid"
+                initial.remainingAmount <= 0 -> "paid"
+                initial.normalizedPaidAmount > 0 -> "partial"
+                else -> "pending"
+            },
+        )
+    }
     var notes by remember(initial) { mutableStateOf(initial?.notes.orEmpty()) }
     var error by remember { mutableStateOf<String?>(null) }
 
@@ -186,25 +254,38 @@ fun ExpenseEditorDialog(
         onDismiss = onDismiss,
         onSave = {
             val parsedAmount = amount.toDoubleOrNull()
+            val parsedPaidAmount = paidAmount.toDoubleOrNull() ?: 0.0
             when {
-                title.trim().length < 3 -> error = "Informe uma descrição com pelo menos 3 caracteres."
+                title.trim().length < 3 -> error = "Informe uma descricao com pelo menos 3 caracteres."
                 parsedAmount == null || parsedAmount <= 0.0 -> error = "Informe um valor maior que zero."
                 category.isBlank() -> error = "Selecione uma categoria."
                 paymentMethod.trim().isBlank() -> error = "Informe a forma de pagamento."
                 dueDate.isBlank() -> error = "Informe a data de vencimento."
-                else -> onSave(
-                    ExpenseMutation(
-                        title = title.trim(),
-                        amount = parsedAmount,
-                        categoryName = category,
-                        paymentMethod = paymentMethod.trim(),
-                        status = status,
-                        expenseDate = dueDate,
-                        dueDate = dueDate,
-                        paidAt = if (status == "paid") dueDate else null,
-                        notes = notes.trim().ifBlank { null },
-                    ),
-                )
+                status == "partial" && (parsedPaidAmount <= 0.0 || parsedPaidAmount >= parsedAmount) -> {
+                    error = "No status parcial, use um valor pago maior que zero e menor que o total."
+                }
+                status != "partial" && parsedPaidAmount < 0 -> error = "O valor pago nao pode ser negativo."
+                else -> {
+                    val normalizedPaidAmount = when (status) {
+                        "paid" -> parsedAmount
+                        "pending" -> 0.0
+                        else -> parsedPaidAmount.coerceIn(0.0, parsedAmount)
+                    }
+                    onSave(
+                        ExpenseMutation(
+                            title = title.trim(),
+                            amount = parsedAmount,
+                            paidAmount = normalizedPaidAmount,
+                            categoryName = category,
+                            paymentMethod = paymentMethod.trim(),
+                            status = status,
+                            expenseDate = dueDate,
+                            dueDate = dueDate,
+                            paidAt = if (normalizedPaidAmount > 0) dueDate else null,
+                            notes = notes.trim().ifBlank { null },
+                        ),
+                    )
+                }
             }
         },
     ) {
@@ -213,11 +294,20 @@ fun ExpenseEditorDialog(
             return@EditorDialog
         }
 
-        EditorTextField(title, { title = it; error = null }, "Descrição", "Ex.: Mercado da semana")
+        EditorTextField(title, { title = it; error = null }, "Descricao", "Ex.: Mercado da semana")
         EditorTextField(
             value = amount,
-            onValueChange = { amount = it; error = null },
-            label = "Valor",
+            onValueChange = {
+                amount = it
+                if (status == "paid") {
+                    paidAmount = it
+                }
+                if (status == "pending") {
+                    paidAmount = "0"
+                }
+                error = null
+            },
+            label = "Valor total",
             placeholder = "0.00",
             keyboardType = KeyboardType.Decimal,
         )
@@ -231,25 +321,40 @@ fun ExpenseEditorDialog(
             value = paymentMethod,
             onValueChange = { paymentMethod = it; error = null },
             label = "Pagamento",
-            placeholder = "Pix, débito, boleto...",
+            placeholder = "Pix, debito, boleto...",
         )
         EditorTextField(
             value = dueDate,
             onValueChange = { dueDate = it; error = null },
             label = "Data de vencimento",
-            placeholder = "2026-05-06",
+            placeholder = "2026-05-07",
         )
         OptionSelector(
             label = "Status",
             selectedValue = status,
-            options = listOf("pending" to "Pendente", "paid" to "Pago"),
-            onSelected = { status = it; error = null },
+            options = listOf("paid" to "Pago", "partial" to "Parcial", "pending" to "Pendente"),
+            onSelected = {
+                status = it
+                when (it) {
+                    "paid" -> paidAmount = amount
+                    "pending" -> paidAmount = "0"
+                }
+                error = null
+            },
+        )
+        EditorTextField(
+            value = paidAmount,
+            onValueChange = { paidAmount = it; error = null },
+            label = "Valor ja pago",
+            placeholder = "0.00",
+            keyboardType = KeyboardType.Decimal,
+            enabled = status == "partial",
         )
         EditorTextField(
             value = notes,
             onValueChange = { notes = it },
-            label = "Observações",
-            placeholder = "Contexto adicional, recorrência ou lembrete.",
+            label = "Observacoes",
+            placeholder = "Contexto adicional, recorrencia ou lembrete.",
             singleLine = false,
         )
         error?.let { ErrorText(it) }
@@ -281,7 +386,7 @@ fun IncomeEditorDialog(
         onSave = {
             val parsedAmount = amount.toDoubleOrNull()
             when {
-                title.trim().length < 3 -> error = "Informe uma descrição com pelo menos 3 caracteres."
+                title.trim().length < 3 -> error = "Informe uma descricao com pelo menos 3 caracteres."
                 parsedAmount == null || parsedAmount <= 0.0 -> error = "Informe um valor maior que zero."
                 source.isBlank() -> error = "Selecione a origem da receita."
                 date.isBlank() -> error = "Informe a data da receita."
@@ -305,7 +410,7 @@ fun IncomeEditorDialog(
             return@EditorDialog
         }
 
-        EditorTextField(title, { title = it; error = null }, "Descrição", "Ex.: Salário mensal")
+        EditorTextField(title, { title = it; error = null }, "Descricao", "Ex.: Salario mensal")
         EditorTextField(
             value = amount,
             onValueChange = { amount = it; error = null },
@@ -323,7 +428,7 @@ fun IncomeEditorDialog(
             value = date,
             onValueChange = { date = it; error = null },
             label = "Data",
-            placeholder = "2026-05-06",
+            placeholder = "2026-05-07",
         )
         OptionSelector(
             label = "Status",
@@ -334,8 +439,8 @@ fun IncomeEditorDialog(
         EditorTextField(
             value = notes,
             onValueChange = { notes = it },
-            label = "Observações",
-            placeholder = "Detalhes sobre a origem ou recorrência.",
+            label = "Observacoes",
+            placeholder = "Detalhes sobre a origem ou recorrencia.",
             singleLine = false,
         )
         error?.let { ErrorText(it) }
@@ -423,13 +528,83 @@ fun InvestmentEditorDialog(
             value = date,
             onValueChange = { date = it; error = null },
             label = "Data",
-            placeholder = "2026-05-06",
+            placeholder = "2026-05-07",
         )
         EditorTextField(
             value = notes,
             onValueChange = { notes = it },
-            label = "Observações",
-            placeholder = "Observações sobre o aporte ou estratégia.",
+            label = "Observacoes",
+            placeholder = "Observacoes sobre o aporte ou estrategia.",
+            singleLine = false,
+        )
+        error?.let { ErrorText(it) }
+    }
+}
+
+@Composable
+fun GoalEditorDialog(
+    initial: GoalRecord?,
+    submitting: Boolean,
+    onDismiss: () -> Unit,
+    onSave: (GoalMutation) -> Unit,
+) {
+    var title by remember(initial) { mutableStateOf(initial?.title.orEmpty()) }
+    var targetAmount by remember(initial) { mutableStateOf(initial?.targetAmount?.toString().orEmpty()) }
+    var currentAmount by remember(initial) { mutableStateOf(initial?.currentAmount?.toString().orEmpty()) }
+    var targetDate by remember(initial) { mutableStateOf(initial?.targetDate.orEmpty()) }
+    var notes by remember(initial) { mutableStateOf(initial?.notes.orEmpty()) }
+    var error by remember { mutableStateOf<String?>(null) }
+
+    EditorDialog(
+        title = if (initial == null) "Nova meta" else "Editar meta",
+        submitting = submitting,
+        onDismiss = onDismiss,
+        onSave = {
+            val parsedTargetAmount = targetAmount.toDoubleOrNull()
+            val parsedCurrentAmount = currentAmount.toDoubleOrNull() ?: 0.0
+            when {
+                title.trim().length < 3 -> error = "Informe um nome com pelo menos 3 caracteres."
+                parsedTargetAmount == null || parsedTargetAmount <= 0.0 -> error = "Informe um valor-alvo maior que zero."
+                parsedCurrentAmount < 0.0 -> error = "O valor reservado nao pode ser negativo."
+                parsedCurrentAmount > parsedTargetAmount -> error = "O valor reservado nao pode ser maior que o alvo."
+                else -> onSave(
+                    GoalMutation(
+                        title = title.trim(),
+                        targetAmount = parsedTargetAmount,
+                        currentAmount = parsedCurrentAmount,
+                        targetDate = targetDate.trim().ifBlank { null },
+                        notes = notes.trim().ifBlank { null },
+                    ),
+                )
+            }
+        },
+    ) {
+        EditorTextField(title, { title = it; error = null }, "Nome da meta", "Ex.: Comprar um carro")
+        EditorTextField(
+            value = targetAmount,
+            onValueChange = { targetAmount = it; error = null },
+            label = "Valor-alvo",
+            placeholder = "0.00",
+            keyboardType = KeyboardType.Decimal,
+        )
+        EditorTextField(
+            value = currentAmount,
+            onValueChange = { currentAmount = it; error = null },
+            label = "Valor ja reservado",
+            placeholder = "0.00",
+            keyboardType = KeyboardType.Decimal,
+        )
+        EditorTextField(
+            value = targetDate,
+            onValueChange = { targetDate = it; error = null },
+            label = "Data limite",
+            placeholder = "2026-12-31",
+        )
+        EditorTextField(
+            value = notes,
+            onValueChange = { notes = it },
+            label = "Observacoes",
+            placeholder = "Detalhes do objetivo, estrategia ou lembretes.",
             singleLine = false,
         )
         error?.let { ErrorText(it) }
@@ -494,6 +669,7 @@ private fun EditorTextField(
     placeholder: String,
     keyboardType: KeyboardType = KeyboardType.Text,
     singleLine: Boolean = true,
+    enabled: Boolean = true,
 ) {
     OutlinedTextField(
         value = value,
@@ -504,6 +680,7 @@ private fun EditorTextField(
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
         singleLine = singleLine,
         minLines = if (singleLine) 1 else 3,
+        enabled = enabled,
         colors = OutlinedTextFieldDefaults.colors(),
     )
 }
@@ -565,3 +742,4 @@ private fun slugify(value: String): String {
 
 private fun today(): String = java.time.LocalDate.now().toString()
 
+private fun Double.formatMoney(): String = "R$ %.2f".format(this)

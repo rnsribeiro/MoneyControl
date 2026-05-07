@@ -1,12 +1,14 @@
 import { getCurrentUserId } from "@/lib/auth/session";
 import {
   mockExpenses,
+  mockGoals,
   mockIncomes,
   mockInvestments,
   monthlyOverview,
 } from "@/lib/mock-data";
 import {
   mapExpenseRow,
+  mapGoalRow,
   mapIncomeRow,
   mapInvestmentRow,
 } from "@/lib/services/moneycontrol-mappers";
@@ -16,6 +18,7 @@ import type {
   CategoryBreakdown,
   DashboardSummary,
   Expense,
+  Goal,
   Income,
   Investment,
   MonthlyOverviewPoint,
@@ -92,14 +95,17 @@ export async function getDashboardData(
       filteredSnapshot.expenses,
       filteredSnapshot.incomes,
       filteredSnapshot.investments,
+      snapshot.goals,
     ),
     expenseCategories: buildCategoryBreakdown(
       filteredSnapshot.expenses,
       (expense) => expense.category,
+      (expense) => expense.amount,
     ),
     incomeSources: buildCategoryBreakdown(
       filteredSnapshot.incomes,
       (income) => income.source,
+      (income) => income.amount,
     ),
     overview: buildMonthlyOverview(snapshot, filter),
     activities: buildRecentActivities(filteredSnapshot),
@@ -166,6 +172,7 @@ function buildSummary(
   expenses: Expense[],
   incomes: Income[],
   investments: Investment[],
+  goals: Goal[],
 ): DashboardSummary {
   const receivedIncome = incomes
     .filter((item) => item.status === "received")
@@ -175,13 +182,10 @@ function buildSummary(
     .reduce((sum, item) => sum + item.amount, 0);
   const totalIncome = receivedIncome + expectedIncome;
   const totalExpenses = expenses.reduce((sum, item) => sum + item.amount, 0);
-  const paidExpenses = expenses
-    .filter((item) => item.status === "paid")
-    .reduce((sum, item) => sum + item.amount, 0);
-  const pendingExpenses = expenses
-    .filter((item) => item.status !== "paid")
-    .reduce((sum, item) => sum + item.amount, 0);
+  const paidExpenses = expenses.reduce((sum, item) => sum + item.paidAmount, 0);
+  const pendingExpenses = expenses.reduce((sum, item) => sum + item.remainingAmount, 0);
   const totalInvested = investments.reduce((sum, item) => sum + item.amount, 0);
+  const goalReserved = goals.reduce((sum, item) => sum + item.currentAmount, 0);
   const balance = totalIncome - totalExpenses - totalInvested;
   const cashOnHand = receivedIncome - paidExpenses - totalInvested;
   const savingsRate = receivedIncome ? Math.round((totalInvested / receivedIncome) * 100) : 0;
@@ -194,24 +198,26 @@ function buildSummary(
     paidExpenses,
     pendingExpenses,
     totalInvested,
+    goalReserved,
     balance,
     cashOnHand,
     savingsRate,
   };
 }
 
-function buildCategoryBreakdown<T extends Expense | Income>(
+function buildCategoryBreakdown<T>(
   items: T[],
   getLabel: (item: T) => string,
+  getAmount: (item: T) => number,
 ): CategoryBreakdown[] {
   const totals = new Map<string, number>();
 
   items.forEach((item) => {
     const label = getLabel(item);
-    totals.set(label, (totals.get(label) ?? 0) + item.amount);
+    totals.set(label, (totals.get(label) ?? 0) + getAmount(item));
   });
 
-  const grandTotal = items.reduce((sum, item) => sum + item.amount, 0);
+  const grandTotal = items.reduce((sum, item) => sum + getAmount(item), 0);
 
   if (!grandTotal) {
     return [];
@@ -340,7 +346,12 @@ function buildRecentActivities(snapshot: {
       date: expense.date,
       category: expense.category,
       type: "expense" as const,
-      status: expense.status,
+      status:
+        expense.status === "paid"
+          ? "pago"
+          : expense.status === "partial"
+            ? "parcial"
+            : expense.status,
     })),
     ...snapshot.investments.map((investment) => ({
       id: investment.id,
@@ -422,6 +433,7 @@ async function getFinanceSnapshot(): Promise<{
   expenses: Expense[];
   incomes: Income[];
   investments: Investment[];
+  goals: Goal[];
 }> {
   const supabase = await createSupabaseServerClient();
   const userId = await getCurrentUserId();
@@ -431,14 +443,15 @@ async function getFinanceSnapshot(): Promise<{
       expenses: mockExpenses,
       incomes: mockIncomes,
       investments: mockInvestments,
+      goals: mockGoals,
     };
   }
 
-  const [expensesResult, incomesResult, investmentsResult] = await Promise.all([
+  const [expensesResult, incomesResult, investmentsResult, goalsResult] = await Promise.all([
     supabase
       .from(MC_TABLES.expenses)
       .select(
-        "id, title, amount, category_name, expense_date, due_date, paid_at, payment_method, status, notes",
+        "id, title, amount, paid_amount, category_name, expense_date, due_date, paid_at, payment_method, status, notes",
       )
       .eq("user_id", userId),
     supabase
@@ -451,13 +464,18 @@ async function getFinanceSnapshot(): Promise<{
       .from(MC_TABLES.investments)
       .select("id, name, type, amount, investment_date, broker, goal, notes")
       .eq("user_id", userId),
+    supabase
+      .from(MC_TABLES.goals)
+      .select("id, title, target_amount, current_amount, target_date, notes")
+      .eq("user_id", userId),
   ]);
 
-  if (expensesResult.error || incomesResult.error || investmentsResult.error) {
+  if (expensesResult.error || incomesResult.error || investmentsResult.error || goalsResult.error) {
     return {
       expenses: mockExpenses,
       incomes: mockIncomes,
       investments: mockInvestments,
+      goals: mockGoals,
     };
   }
 
@@ -465,5 +483,6 @@ async function getFinanceSnapshot(): Promise<{
     expenses: expensesResult.data.map(mapExpenseRow),
     incomes: incomesResult.data.map(mapIncomeRow),
     investments: investmentsResult.data.map(mapInvestmentRow),
+    goals: goalsResult.data.map(mapGoalRow),
   };
 }

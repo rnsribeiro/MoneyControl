@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { DashboardCharts } from "@/components/dashboard/dashboard-charts";
 import { DashboardFilter } from "@/components/dashboard/dashboard-filter";
+import { DashboardGoals } from "@/components/dashboard/dashboard-goals";
 import { MetricGrid } from "@/components/dashboard/metric-grid";
 import { RecentTransactions } from "@/components/dashboard/recent-transactions";
 import { MigrationWarning } from "@/app/(app)/dashboard/migration-warning";
@@ -9,6 +10,7 @@ import {
   getDashboardData,
   parseDashboardFilter,
 } from "@/lib/services/dashboard.service";
+import { listGoals } from "@/lib/services/goals.service";
 import { buttonVariants } from "@/components/ui/button";
 import { hasExpenseTableConnection } from "@/lib/services/expenses.service";
 
@@ -23,9 +25,10 @@ export default async function DashboardPage({
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
   const filter = parseDashboardFilter(resolvedSearchParams);
 
-  const [dashboardData, hasTables] = await Promise.all([
+  const [dashboardData, hasTables, goals] = await Promise.all([
     getDashboardData(filter),
     hasExpenseTableConnection(),
+    listGoals(),
   ]);
 
   return (
@@ -59,6 +62,7 @@ export default async function DashboardPage({
       />
       {!hasTables ? <MigrationWarning /> : null}
       <MetricGrid summary={dashboardData.summary} />
+      <DashboardGoals goals={goals} />
       <DashboardCharts
         summary={dashboardData.summary}
         overview={dashboardData.overview}

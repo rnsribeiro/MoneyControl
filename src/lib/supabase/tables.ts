@@ -3,4 +3,5 @@ export const MC_TABLES = {
   incomes: "mc_incomes",
   expenses: "mc_expenses",
   investments: "mc_investments",
+  goals: "mc_goals",
 } as const;

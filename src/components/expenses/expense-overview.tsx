@@ -6,12 +6,12 @@ import { formatCurrency } from "@/utils/currency";
 export function ExpenseOverview({ overview }: { overview: ExpenseOverviewData }) {
   const items = [
     {
-      label: "Pago no mes",
+      label: "Pago no mês",
       value: formatCurrency(overview.paidThisMonth),
       icon: CalendarCheck2,
     },
     {
-      label: "Pendente no mes",
+      label: "Em aberto no mês",
       value: formatCurrency(overview.pendingThisMonth),
       icon: Clock3,
     },

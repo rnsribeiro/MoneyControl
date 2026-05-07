@@ -1,10 +1,12 @@
 import {
   BarChart3,
   FolderTree,
+  History,
   Landmark,
   PiggyBank,
   PlusCircle,
   ReceiptText,
+  Target,
 } from "lucide-react";
 
 export const appNavigation = [
@@ -22,6 +24,16 @@ export const appNavigation = [
     title: "Receitas",
     href: "/receitas",
     icon: Landmark,
+  },
+  {
+    title: "Histórico",
+    href: "/historico",
+    icon: History,
+  },
+  {
+    title: "Metas",
+    href: "/metas",
+    icon: Target,
   },
   {
     title: "Categorias",

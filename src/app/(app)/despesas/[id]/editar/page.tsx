@@ -31,10 +31,16 @@ export default async function EditExpensePage({
           id: expense.id,
           title: expense.title,
           amount: expense.amount,
+          paidAmount: expense.paidAmount,
           category: expense.category,
           dueDate: expense.dueDate,
           paymentMethod: expense.paymentMethod,
-          status: expense.status === "paid" ? "paid" : "pending",
+          status:
+            expense.status === "paid"
+              ? "paid"
+              : expense.status === "partial"
+                ? "partial"
+                : "pending",
           notes: expense.notes,
         }}
       />

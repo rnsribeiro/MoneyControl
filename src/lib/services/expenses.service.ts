@@ -1,8 +1,8 @@
 import { getCurrentUserId } from "@/lib/auth/session";
 import { mockExpenses } from "@/lib/mock-data";
+import { mapExpenseRow } from "@/lib/services/moneycontrol-mappers";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { MC_TABLES } from "@/lib/supabase/tables";
-import { mapExpenseRow } from "@/lib/services/moneycontrol-mappers";
 import type { Expense } from "@/types/finance";
 import { parseDateOnly } from "@/utils/date";
 
@@ -16,7 +16,9 @@ export async function listExpenses(): Promise<Expense[]> {
 
   const { data, error } = await supabase
     .from(MC_TABLES.expenses)
-    .select("id, title, amount, category_name, expense_date, due_date, paid_at, payment_method, status, notes")
+    .select(
+      "id, title, amount, paid_amount, category_name, expense_date, due_date, paid_at, payment_method, status, notes",
+    )
     .eq("user_id", userId)
     .order("due_date", { ascending: false });
 
@@ -37,7 +39,9 @@ export async function getExpenseById(id: string): Promise<Expense | null> {
 
   const { data, error } = await supabase
     .from(MC_TABLES.expenses)
-    .select("id, title, amount, category_name, expense_date, due_date, paid_at, payment_method, status, notes")
+    .select(
+      "id, title, amount, paid_amount, category_name, expense_date, due_date, paid_at, payment_method, status, notes",
+    )
     .eq("user_id", userId)
     .eq("id", id)
     .maybeSingle();
@@ -67,28 +71,28 @@ export function getExpenseOverview(expenses: Expense[]): ExpenseOverview {
       const paidDate = expense.paidAt ? parseDateOnly(expense.paidAt) : null;
 
       if (
-        expense.status === "paid" &&
+        expense.paidAmount > 0 &&
         paidDate &&
         paidDate.getMonth() === currentMonth &&
         paidDate.getFullYear() === currentYear
       ) {
-        acc.paidThisMonth += expense.amount;
+        acc.paidThisMonth += expense.paidAmount;
       }
 
       if (
-        expense.status !== "paid" &&
+        expense.remainingAmount > 0 &&
         dueDate.getMonth() === currentMonth &&
         dueDate.getFullYear() === currentYear
       ) {
-        acc.pendingThisMonth += expense.amount;
+        acc.pendingThisMonth += expense.remainingAmount;
       }
 
       if (expense.status === "overdue") {
         acc.overdueCount += 1;
       }
 
-      if (expense.status === "paid" && paidDate && paidDate.getFullYear() === currentYear) {
-        acc.paidThisYear += expense.amount;
+      if (expense.paidAmount > 0 && paidDate && paidDate.getFullYear() === currentYear) {
+        acc.paidThisYear += expense.paidAmount;
       }
 
       return acc;

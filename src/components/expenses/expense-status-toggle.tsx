@@ -10,11 +10,13 @@ import type { ExpenseStatus } from "@/types/finance";
 interface ExpenseStatusToggleProps {
   expenseId: string;
   status: ExpenseStatus;
+  amount?: number;
 }
 
 export function ExpenseStatusToggle({
   expenseId,
   status,
+  amount,
 }: ExpenseStatusToggleProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
@@ -44,7 +46,9 @@ export function ExpenseStatusToggle({
     }
 
     toast.success(
-      nextStatus === "paid" ? "Despesa marcada como paga." : "Despesa marcada como pendente.",
+      nextStatus === "paid"
+        ? `Despesa marcada como paga${amount ? ` em ${amount.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}` : ""}.`
+        : "Despesa marcada como pendente.",
     );
     router.refresh();
     setIsLoading(false);
@@ -58,11 +62,11 @@ export function ExpenseStatusToggle({
       disabled={isLoading}
       onClick={handleToggle}
       aria-label={status === "paid" ? "Marcar despesa como pendente" : "Marcar despesa como paga"}
-      title={status === "paid" ? "Marcar pendente" : "Marcar pago"}
+      title={status === "paid" ? "Marcar pendente" : "Quitar despesa"}
     >
       {status === "paid" ? <RotateCcw className="size-4" /> : <CheckCircle2 className="size-4" />}
       <span className="sr-only">
-        {status === "paid" ? "Marcar pendente" : "Marcar pago"}
+        {status === "paid" ? "Marcar pendente" : "Quitar despesa"}
       </span>
     </Button>
   );

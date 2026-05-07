@@ -11,6 +11,10 @@ export function ExpenseStatusBadge({ status }: { status: ExpenseStatus }) {
       label: "Pendente",
       className: "bg-amber-100 text-amber-900",
     },
+    partial: {
+      label: "Parcial",
+      className: "bg-sky-100 text-sky-900",
+    },
     overdue: {
       label: "Vencida",
       className: "bg-rose-100 text-rose-800",

@@ -1,33 +1,42 @@
-import type { Expense, Income, Investment } from "@/types/finance";
+import type { Expense, Goal, Income, Investment } from "@/types/finance";
 import { compareDateOnly, getLocalDateInputValue } from "@/utils/date";
 
 export function mapExpenseRow(row: {
   id: string;
   title: string;
   amount: number | string;
+  paid_amount?: number | string | null;
   category_name: string;
   expense_date: string;
   due_date?: string;
   paid_at?: string | null;
   payment_method: string;
-  status: "paid" | "pending";
+  status: "paid" | "pending" | "partial";
   notes?: string | null;
 }): Expense {
   const dueDate = row.due_date ?? row.expense_date;
+  const amount = Number(row.amount);
+  const paidAmount = clampCurrency(Number(row.paid_amount ?? 0), amount);
+  const remainingAmount = clampCurrency(amount - paidAmount);
+  const progressPercentage = amount ? Math.min(100, Math.round((paidAmount / amount) * 100)) : 0;
+  const baseStatus =
+    paidAmount >= amount ? "paid" : paidAmount > 0 ? "partial" : row.status;
   const isOverdue =
-    row.status !== "paid" &&
-    compareDateOnly(dueDate, getLocalDateInputValue()) < 0;
+    remainingAmount > 0 && compareDateOnly(dueDate, getLocalDateInputValue()) < 0;
 
   return {
     id: row.id,
     title: row.title,
-    amount: Number(row.amount),
+    amount,
+    paidAmount,
+    remainingAmount,
+    progressPercentage,
     category: row.category_name,
     date: dueDate,
     dueDate,
     paidAt: row.paid_at ?? undefined,
     paymentMethod: row.payment_method,
-    status: isOverdue ? "overdue" : row.status,
+    status: isOverdue ? "overdue" : baseStatus,
     notes: row.notes ?? undefined,
   };
 }
@@ -79,4 +88,42 @@ export function mapInvestmentRow(row: {
     goal: row.goal,
     notes: row.notes ?? undefined,
   };
+}
+
+export function mapGoalRow(row: {
+  id: string;
+  title: string;
+  target_amount: number | string;
+  current_amount?: number | string | null;
+  target_date?: string | null;
+  notes?: string | null;
+}): Goal {
+  const targetAmount = Number(row.target_amount);
+  const currentAmount = clampCurrency(Number(row.current_amount ?? 0));
+  const remainingAmount = clampCurrency(Math.max(targetAmount - currentAmount, 0));
+  const progressPercentage = targetAmount
+    ? Math.min(100, Math.round((currentAmount / targetAmount) * 100))
+    : 0;
+
+  return {
+    id: row.id,
+    title: row.title,
+    targetAmount,
+    currentAmount,
+    remainingAmount,
+    progressPercentage,
+    targetDate: row.target_date ?? undefined,
+    notes: row.notes ?? undefined,
+    isCompleted: currentAmount >= targetAmount,
+  };
+}
+
+function clampCurrency(value: number, ceiling?: number) {
+  const normalized = Number.isFinite(value) ? Math.max(0, value) : 0;
+
+  if (typeof ceiling === "number") {
+    return Math.min(normalized, ceiling);
+  }
+
+  return normalized;
 }

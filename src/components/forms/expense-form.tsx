@@ -1,9 +1,9 @@
-﻿"use client";
+"use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { CategoryOption } from "@/lib/services/categories.service";
@@ -38,10 +38,11 @@ export function ExpenseForm({
     id: string;
     title: string;
     amount: number;
+    paidAmount: number;
     category: string;
     dueDate: string;
     paymentMethod: string;
-    status: "paid" | "pending";
+    status: "paid" | "pending" | "partial";
     notes?: string;
   };
 }) {
@@ -53,6 +54,7 @@ export function ExpenseForm({
     defaultValues: {
       title: initialValues?.title ?? "",
       amount: initialValues?.amount ?? 0,
+      paidAmount: initialValues?.paidAmount ?? 0,
       category: initialValues?.category ?? resolvedCategoryOptions[0]?.value ?? "",
       dueDate: initialValues?.dueDate ?? getLocalDateInputValue(),
       paymentMethod: initialValues?.paymentMethod ?? "",
@@ -60,6 +62,24 @@ export function ExpenseForm({
       notes: initialValues?.notes ?? "",
     },
   });
+
+  const watchedStatus = useWatch({ control: form.control, name: "status" });
+  const watchedAmount = useWatch({ control: form.control, name: "amount" });
+
+  useEffect(() => {
+    if (!Number.isFinite(watchedAmount)) {
+      return;
+    }
+
+    if (watchedStatus === "paid") {
+      form.setValue("paidAmount", watchedAmount, { shouldValidate: true });
+      return;
+    }
+
+    if (watchedStatus === "pending") {
+      form.setValue("paidAmount", 0, { shouldValidate: true });
+    }
+  }, [form, watchedAmount, watchedStatus]);
 
   if (!resolvedCategoryOptions.length) {
     return <CategoryRequiredState kindLabel="despesas" />;
@@ -87,16 +107,24 @@ export function ExpenseForm({
       return;
     }
 
+    const normalizedPaidAmount =
+      values.status === "paid"
+        ? values.amount
+        : values.status === "pending"
+          ? 0
+          : values.paidAmount;
+
     const payload: MoneyControlExpenseInsert = {
       user_id: user.id,
       title: values.title,
       amount: values.amount,
+      paid_amount: normalizedPaidAmount,
       category_name: values.category,
       payment_method: values.paymentMethod,
       status: values.status,
       expense_date: values.dueDate,
       due_date: values.dueDate,
-      paid_at: values.status === "paid" ? values.dueDate : undefined,
+      paid_at: normalizedPaidAmount > 0 ? values.dueDate : undefined,
       notes: values.notes,
     };
 
@@ -124,6 +152,7 @@ export function ExpenseForm({
     form.reset({
       title: initialValues?.title ?? "",
       amount: initialValues?.amount ?? 0,
+      paidAmount: initialValues?.paidAmount ?? 0,
       category: initialValues?.category ?? resolvedCategoryOptions[0]?.value ?? "",
       dueDate: initialValues?.dueDate ?? getLocalDateInputValue(),
       paymentMethod: initialValues?.paymentMethod ?? "",
@@ -137,7 +166,9 @@ export function ExpenseForm({
   return (
     <Card className="border-border/70 bg-white/90 shadow-sm shadow-slate-200/50">
       <CardHeader>
-        <CardTitle className="font-heading text-2xl">Nova despesa</CardTitle>
+        <CardTitle className="font-heading text-2xl">
+          {initialValues?.id ? "Editar despesa" : "Nova despesa"}
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -148,7 +179,7 @@ export function ExpenseForm({
               <FieldError message={form.formState.errors.title?.message} />
             </Field>
             <Field>
-              <Label htmlFor="amount">Valor</Label>
+              <Label htmlFor="amount">Valor total</Label>
               <Input
                 id="amount"
                 type="number"
@@ -183,15 +214,19 @@ export function ExpenseForm({
             </Field>
             <Field>
               <Label htmlFor="paymentMethod">Pagamento</Label>
-              <Input id="paymentMethod" placeholder="Pix, débito, boleto..." {...form.register("paymentMethod")} />
+              <Input
+                id="paymentMethod"
+                placeholder="Pix, débito, boleto..."
+                {...form.register("paymentMethod")}
+              />
               <FieldError message={form.formState.errors.paymentMethod?.message} />
             </Field>
-            <Field className="md:col-span-2">
+            <Field>
               <Label htmlFor="dueDate">Data de vencimento</Label>
               <Input id="dueDate" type="date" {...form.register("dueDate")} />
               <FieldError message={form.formState.errors.dueDate?.message} />
             </Field>
-            <Field className="md:col-span-2">
+            <Field>
               <Label>Status inicial</Label>
               <Controller
                 control={form.control}
@@ -202,13 +237,30 @@ export function ExpenseForm({
                       <SelectValue placeholder="Selecione o status" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="pending">Pendente</SelectItem>
                       <SelectItem value="paid">Pago</SelectItem>
+                      <SelectItem value="partial">Parcial</SelectItem>
+                      <SelectItem value="pending">Pendente</SelectItem>
                     </SelectContent>
                   </Select>
                 )}
               />
               <FieldError message={form.formState.errors.status?.message} />
+            </Field>
+            <Field className="md:col-span-2">
+              <Label htmlFor="paidAmount">Valor já pago</Label>
+              <Input
+                id="paidAmount"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="0,00"
+                disabled={watchedStatus !== "partial"}
+                {...form.register("paidAmount", { valueAsNumber: true })}
+              />
+              <p className="text-xs leading-5 text-muted-foreground">
+                Use este campo quando a conta já tiver sido paga parcialmente.
+              </p>
+              <FieldError message={form.formState.errors.paidAmount?.message} />
             </Field>
             <Field className="md:col-span-2">
               <Label htmlFor="notes">Observações</Label>
@@ -251,4 +303,3 @@ function Field({
 function FieldError({ message }: { message?: string }) {
   return message ? <p className="text-sm text-destructive">{message}</p> : null;
 }
-

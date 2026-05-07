@@ -1,5 +1,6 @@
-﻿import type {
+import type {
   Expense,
+  Goal,
   Income,
   Investment,
   MonthlyOverviewPoint,
@@ -11,6 +12,9 @@ export const mockExpenses: Expense[] = [
     id: "exp-1",
     title: "Aluguel",
     amount: 1800,
+    paidAmount: 1800,
+    remainingAmount: 0,
+    progressPercentage: 100,
     category: "moradia",
     date: "2026-05-02",
     dueDate: "2026-05-02",
@@ -22,6 +26,9 @@ export const mockExpenses: Expense[] = [
     id: "exp-2",
     title: "Supermercado",
     amount: 720,
+    paidAmount: 720,
+    remainingAmount: 0,
+    progressPercentage: 100,
     category: "alimentacao",
     date: "2026-05-04",
     dueDate: "2026-05-04",
@@ -33,6 +40,9 @@ export const mockExpenses: Expense[] = [
     id: "exp-3",
     title: "Combustível",
     amount: 320,
+    paidAmount: 320,
+    remainingAmount: 0,
+    progressPercentage: 100,
     category: "transporte",
     date: "2026-05-01",
     dueDate: "2026-05-01",
@@ -44,16 +54,23 @@ export const mockExpenses: Expense[] = [
     id: "exp-4",
     title: "Plano de saúde",
     amount: 540,
+    paidAmount: 180,
+    remainingAmount: 360,
+    progressPercentage: 33,
     category: "saude",
     date: "2026-05-10",
     dueDate: "2026-05-10",
+    paidAt: "2026-05-06",
     paymentMethod: "boleto",
-    status: "pending",
+    status: "partial",
   },
   {
     id: "exp-5",
     title: "Cinema e jantar",
     amount: 210,
+    paidAmount: 210,
+    remainingAmount: 0,
+    progressPercentage: 100,
     category: "lazer",
     date: "2026-05-05",
     dueDate: "2026-05-05",
@@ -65,6 +82,9 @@ export const mockExpenses: Expense[] = [
     id: "exp-6",
     title: "Internet",
     amount: 120,
+    paidAmount: 0,
+    remainingAmount: 120,
+    progressPercentage: 0,
     category: "moradia",
     date: "2026-05-03",
     dueDate: "2026-05-03",
@@ -126,6 +146,30 @@ export const mockInvestments: Investment[] = [
   },
 ];
 
+export const mockGoals: Goal[] = [
+  {
+    id: "goal-1",
+    title: "Comprar um carro",
+    targetAmount: 45000,
+    currentAmount: 12750,
+    remainingAmount: 32250,
+    progressPercentage: 28,
+    targetDate: "2027-12-31",
+    notes: "Meta para trocar de carro sem comprometer a reserva.",
+    isCompleted: false,
+  },
+  {
+    id: "goal-2",
+    title: "Viagem internacional",
+    targetAmount: 18000,
+    currentAmount: 18000,
+    remainingAmount: 0,
+    progressPercentage: 100,
+    notes: "Tudo reservado para a viagem do próximo ano.",
+    isCompleted: true,
+  },
+];
+
 export const monthlyOverview: MonthlyOverviewPoint[] = [
   { month: getMonthLabel(5), income: 7000, expense: 4100, investment: 1200 },
   { month: getMonthLabel(4), income: 6800, expense: 3950, investment: 900 },
@@ -134,4 +178,3 @@ export const monthlyOverview: MonthlyOverviewPoint[] = [
   { month: getMonthLabel(1), income: 7350, expense: 4460, investment: 1300 },
   { month: getMonthLabel(0), income: 8600, expense: 3710, investment: 1850 },
 ];
-
