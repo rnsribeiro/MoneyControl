@@ -9,7 +9,7 @@ export default async function NewInvestmentPage() {
     <div className="space-y-6">
       <PageHeader
         title="Cadastrar investimento"
-        description="Formulario estruturado para captar tipo, corretora, objetivo e valor do aporte com validacao pronta."
+        description="Formulário estruturado para captar tipo, corretora, objetivo e valor do aporte com validação pronta."
       />
       <InvestmentForm typeOptions={typeOptions} />
     </div>

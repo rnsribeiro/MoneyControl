@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -27,6 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { getLocalDateInputValue } from "@/utils/date";
 
 export function InvestmentForm({
   typeOptions,
@@ -55,7 +56,7 @@ export function InvestmentForm({
       amount: initialValues?.amount ?? 0,
       broker: initialValues?.broker ?? "",
       goal: initialValues?.goal ?? "",
-      date: initialValues?.date ?? new Date().toISOString().slice(0, 10),
+      date: initialValues?.date ?? getLocalDateInputValue(),
       notes: initialValues?.notes ?? "",
     },
   });
@@ -69,7 +70,7 @@ export function InvestmentForm({
     const supabase = createSupabaseBrowserClient();
 
     if (!supabase) {
-      toast.error("Supabase nao configurado.");
+      toast.error("Supabase não configurado.");
       setIsSubmitting(false);
       return;
     }
@@ -79,8 +80,8 @@ export function InvestmentForm({
     } = await supabase.auth.getUser();
 
     if (!user) {
-      toast.error("Sessao nao encontrada.", {
-        description: "Faca login para salvar seus investimentos.",
+      toast.error("Sessão não encontrada.", {
+        description: "Faça login para salvar seus investimentos.",
       });
       setIsSubmitting(false);
       return;
@@ -105,7 +106,7 @@ export function InvestmentForm({
       : await supabase.from(MC_TABLES.investments).insert(payload);
 
     if (error) {
-      toast.error("Nao foi possivel salvar o aporte.", {
+      toast.error("Não foi possível salvar o aporte.", {
         description: error.message,
       });
       setIsSubmitting(false);
@@ -119,7 +120,7 @@ export function InvestmentForm({
       {
         description: initialValues?.id
           ? `"${values.name}" foi atualizado na carteira.`
-          : `"${values.name}" foi adicionado a carteira.`,
+          : `"${values.name}" foi adicionado à carteira.`,
       },
     );
     setIsSubmitting(false);
@@ -129,7 +130,7 @@ export function InvestmentForm({
       amount: initialValues?.amount ?? 0,
       broker: initialValues?.broker ?? "",
       goal: initialValues?.goal ?? "",
-      date: initialValues?.date ?? new Date().toISOString().slice(0, 10),
+      date: initialValues?.date ?? getLocalDateInputValue(),
       notes: initialValues?.notes ?? "",
     });
     router.push("/investimentos");
@@ -199,10 +200,10 @@ export function InvestmentForm({
               <FieldError message={form.formState.errors.date?.message} />
             </Field>
             <Field className="md:col-span-2">
-              <Label htmlFor="notes">Observacoes</Label>
+              <Label htmlFor="notes">Observações</Label>
               <Textarea
                 id="notes"
-                placeholder="Observacoes sobre o aporte, estrategia ou regra de recorrencia."
+                placeholder="Observações sobre o aporte, estratégia ou regra de recorrência."
                 {...form.register("notes")}
               />
               <FieldError message={form.formState.errors.notes?.message} />
@@ -213,7 +214,7 @@ export function InvestmentForm({
               {isSubmitting
                 ? "Salvando..."
                 : initialValues?.id
-                  ? "Salvar alteracoes"
+                  ? "Salvar alterações"
                   : "Salvar investimento"}
             </Button>
             <Button type="button" variant="outline" onClick={() => form.reset()}>
@@ -239,3 +240,4 @@ function Field({
 function FieldError({ message }: { message?: string }) {
   return message ? <p className="text-sm text-destructive">{message}</p> : null;
 }
+

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -27,6 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { getLocalDateInputValue } from "@/utils/date";
 
 export function IncomeForm({
   sourceOptions,
@@ -52,7 +53,7 @@ export function IncomeForm({
       title: initialValues?.title ?? "",
       amount: initialValues?.amount ?? 0,
       source: initialValues?.source ?? resolvedSourceOptions[0]?.value ?? "",
-      date: initialValues?.date ?? new Date().toISOString().slice(0, 10),
+      date: initialValues?.date ?? getLocalDateInputValue(),
       status: initialValues?.status ?? "received",
       notes: initialValues?.notes ?? "",
     },
@@ -67,7 +68,7 @@ export function IncomeForm({
     const supabase = createSupabaseBrowserClient();
 
     if (!supabase) {
-      toast.error("Supabase nao configurado.");
+      toast.error("Supabase não configurado.");
       setIsSubmitting(false);
       return;
     }
@@ -77,8 +78,8 @@ export function IncomeForm({
     } = await supabase.auth.getUser();
 
     if (!user) {
-      toast.error("Sessao nao encontrada.", {
-        description: "Faca login para salvar suas receitas.",
+      toast.error("Sessão não encontrada.", {
+        description: "Faça login para salvar suas receitas.",
       });
       setIsSubmitting(false);
       return;
@@ -101,7 +102,7 @@ export function IncomeForm({
       : await supabase.from(MC_TABLES.incomes).insert(payload);
 
     if (error) {
-      toast.error("Nao foi possivel salvar a receita.", {
+      toast.error("Não foi possível salvar a receita.", {
         description: error.message,
       });
       setIsSubmitting(false);
@@ -121,7 +122,7 @@ export function IncomeForm({
       title: initialValues?.title ?? "",
       amount: initialValues?.amount ?? 0,
       source: initialValues?.source ?? resolvedSourceOptions[0]?.value ?? "",
-      date: initialValues?.date ?? new Date().toISOString().slice(0, 10),
+      date: initialValues?.date ?? getLocalDateInputValue(),
       status: initialValues?.status ?? "received",
       notes: initialValues?.notes ?? "",
     });
@@ -138,8 +139,8 @@ export function IncomeForm({
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <div className="grid gap-5 md:grid-cols-2">
             <Field>
-              <Label htmlFor="title">Descricao</Label>
-              <Input id="title" placeholder="Ex.: Salario mensal" {...form.register("title")} />
+              <Label htmlFor="title">Descrição</Label>
+              <Input id="title" placeholder="Ex.: Salário mensal" {...form.register("title")} />
               <FieldError message={form.formState.errors.title?.message} />
             </Field>
             <Field>
@@ -201,10 +202,10 @@ export function IncomeForm({
               <FieldError message={form.formState.errors.status?.message} />
             </Field>
             <Field className="md:col-span-2">
-              <Label htmlFor="notes">Observacoes</Label>
+              <Label htmlFor="notes">Observações</Label>
               <Textarea
                 id="notes"
-                placeholder="Detalhes sobre a origem ou recorrencia da receita."
+                placeholder="Detalhes sobre a origem ou recorrência da receita."
                 {...form.register("notes")}
               />
               <FieldError message={form.formState.errors.notes?.message} />
@@ -215,7 +216,7 @@ export function IncomeForm({
               {isSubmitting
                 ? "Salvando..."
                 : initialValues?.id
-                  ? "Salvar alteracoes"
+                  ? "Salvar alterações"
                   : "Salvar receita"}
             </Button>
             <Button type="button" variant="outline" onClick={() => form.reset()}>
@@ -241,3 +242,4 @@ function Field({
 function FieldError({ message }: { message?: string }) {
   return message ? <p className="text-sm text-destructive">{message}</p> : null;
 }
+

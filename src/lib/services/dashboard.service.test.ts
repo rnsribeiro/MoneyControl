@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { getDashboardSummary, getExpensesByCategory } from "@/lib/services/dashboard.service";
+import {
+  getDashboardSummary,
+  getExpensesByCategory,
+  getIncomeBySource,
+} from "@/lib/services/dashboard.service";
 
 describe("dashboard.service", () => {
   it("calcula o resumo financeiro do dashboard", async () => {
@@ -22,6 +26,17 @@ describe("dashboard.service", () => {
 
     expect(categories.length).toBeGreaterThan(0);
     expect(categories[0]).toMatchObject({
+      category: expect.any(String),
+      total: expect.any(Number),
+      percentage: expect.any(Number),
+    });
+  });
+
+  it("retorna origens de receitas com percentual", async () => {
+    const sources = await getIncomeBySource();
+
+    expect(sources.length).toBeGreaterThan(0);
+    expect(sources[0]).toMatchObject({
       category: expect.any(String),
       total: expect.any(Number),
       percentage: expect.any(Number),

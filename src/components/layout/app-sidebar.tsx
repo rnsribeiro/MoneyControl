@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -45,11 +45,12 @@ export function AppSidebar() {
         })}
       </nav>
       <div className="mt-auto rounded-3xl border border-sidebar-border bg-sidebar-accent/65 p-4">
-        <p className="font-medium">Modo demonstracao</p>
+        <p className="font-medium">Modo demonstração</p>
         <p className="mt-2 text-sm leading-6 text-sidebar-foreground/70">
-          Configure o Supabase para ativar autenticacao real e persistencia.
+          Configure o Supabase para ativar autenticação real e persistência.
         </p>
       </div>
     </aside>
   );
 }
+

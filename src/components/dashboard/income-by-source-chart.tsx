@@ -1,12 +1,12 @@
-﻿"use client";
+"use client";
 
-import { Pie, PieChart, Tooltip, Cell } from "recharts";
+import { Cell, Pie, PieChart, Tooltip } from "recharts";
 import { useElementSize } from "@/hooks/use-element-size";
 import type { CategoryBreakdown } from "@/types/finance";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/utils/currency";
 
-export function ExpensesByCategoryChart({
+export function IncomeBySourceChart({
   data,
 }: {
   data: CategoryBreakdown[];
@@ -20,13 +20,16 @@ export function ExpensesByCategoryChart({
   return (
     <Card className="border-border/70 bg-white/85 shadow-sm shadow-slate-200/50">
       <CardHeader className="space-y-1">
-        <CardTitle className="font-heading text-xl">Gastos por categoria</CardTitle>
+        <CardTitle className="font-heading text-xl">Receitas por origem</CardTitle>
         <p className="text-sm text-muted-foreground">
-          Entenda rapidamente onde seu dinheiro está concentrado.
+          Veja com clareza quais fontes estão trazendo mais dinheiro para o seu caixa.
         </p>
       </CardHeader>
       <CardContent className="grid min-w-0 gap-6 lg:grid-cols-[minmax(280px,1fr)_minmax(0,1fr)] 2xl:grid-cols-[minmax(260px,0.9fr)_minmax(0,1.1fr)]">
-        <div ref={ref} className="flex h-80 min-w-0 items-center justify-center rounded-[28px] bg-slate-50/70 px-4 py-4">
+        <div
+          ref={ref}
+          className="flex h-80 min-w-0 items-center justify-center rounded-[28px] bg-slate-50/70 px-4 py-4"
+        >
           {canRenderChart ? (
             <PieChart width={size.width} height={size.height}>
               <Pie
@@ -66,7 +69,7 @@ export function ExpensesByCategoryChart({
                   <div className="min-w-0">
                     <p className="truncate font-medium capitalize">{item.category}</p>
                     <p className="text-sm text-muted-foreground">
-                      {item.percentage}% do total de gastos
+                      {item.percentage}% do total de receitas
                     </p>
                   </div>
                 </div>
@@ -81,4 +84,3 @@ export function ExpensesByCategoryChart({
     </Card>
   );
 }
-

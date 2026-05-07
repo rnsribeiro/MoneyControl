@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -36,7 +36,7 @@ export function ExpenseStatusToggle({
     const payload = (await response.json()) as { error?: string };
 
     if (!response.ok) {
-      toast.error("Nao foi possivel atualizar a despesa.", {
+      toast.error("Não foi possível atualizar a despesa.", {
         description: payload.error ?? "Tente novamente.",
       });
       setIsLoading(false);
@@ -67,3 +67,4 @@ export function ExpenseStatusToggle({
     </Button>
   );
 }
+

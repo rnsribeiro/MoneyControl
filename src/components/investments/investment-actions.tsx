@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -19,7 +19,7 @@ export function InvestmentActions({
 
   async function handleDelete() {
     const confirmed = window.confirm(
-      `Excluir o investimento "${investmentTitle}"? Essa acao nao pode ser desfeita.`,
+      `Excluir o investimento "${investmentTitle}"? Essa ação não pode ser desfeita.`,
     );
 
     if (!confirmed) {
@@ -29,7 +29,7 @@ export function InvestmentActions({
     const supabase = createSupabaseBrowserClient();
 
     if (!supabase) {
-      toast.error("Supabase nao configurado.");
+      toast.error("Supabase não configurado.");
       return;
     }
 
@@ -39,13 +39,13 @@ export function InvestmentActions({
       .eq("id", investmentId);
 
     if (error) {
-      toast.error("Nao foi possivel excluir o investimento.", {
+      toast.error("Não foi possível excluir o investimento.", {
         description: error.message,
       });
       return;
     }
 
-    toast.success("Investimento excluido com sucesso.");
+    toast.success("Investimento excluído com sucesso.");
     router.refresh();
   }
 
@@ -74,3 +74,4 @@ export function InvestmentActions({
     </div>
   );
 }
+

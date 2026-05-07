@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -19,7 +19,7 @@ export function ExpenseActions({
 
   async function handleDelete() {
     const confirmed = window.confirm(
-      `Excluir a despesa "${expenseTitle}"? Essa acao nao pode ser desfeita.`,
+      `Excluir a despesa "${expenseTitle}"? Essa ação não pode ser desfeita.`,
     );
 
     if (!confirmed) {
@@ -29,20 +29,20 @@ export function ExpenseActions({
     const supabase = createSupabaseBrowserClient();
 
     if (!supabase) {
-      toast.error("Supabase nao configurado.");
+      toast.error("Supabase não configurado.");
       return;
     }
 
     const { error } = await supabase.from(MC_TABLES.expenses).delete().eq("id", expenseId);
 
     if (error) {
-      toast.error("Nao foi possivel excluir a despesa.", {
+      toast.error("Não foi possível excluir a despesa.", {
         description: error.message,
       });
       return;
     }
 
-    toast.success("Despesa excluida com sucesso.");
+    toast.success("Despesa excluída com sucesso.");
     router.refresh();
   }
 
@@ -71,3 +71,4 @@ export function ExpenseActions({
     </div>
   );
 }
+

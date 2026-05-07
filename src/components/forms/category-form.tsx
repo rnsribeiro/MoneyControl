@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -56,7 +56,7 @@ export function CategoryForm({
     const supabase = createSupabaseBrowserClient();
 
     if (!supabase) {
-      toast.error("Supabase nao configurado.");
+      toast.error("Supabase não configurado.");
       setIsSubmitting(false);
       return;
     }
@@ -66,7 +66,7 @@ export function CategoryForm({
     } = await supabase.auth.getUser();
 
     if (!user) {
-      toast.error("Sessao nao encontrada.");
+      toast.error("Sessão não encontrada.");
       setIsSubmitting(false);
       return;
     }
@@ -90,7 +90,7 @@ export function CategoryForm({
         });
 
     if (error) {
-      toast.error("Nao foi possivel salvar a categoria.", {
+      toast.error("Não foi possível salvar a categoria.", {
         description: error.message,
       });
       setIsSubmitting(false);
@@ -153,7 +153,7 @@ export function CategoryForm({
               {isSubmitting
                 ? "Salvando..."
                 : initialValues?.id
-                  ? "Salvar alteracoes"
+                  ? "Salvar alterações"
                   : "Salvar categoria"}
             </Button>
           </div>
@@ -166,3 +166,4 @@ export function CategoryForm({
 function FieldError({ message }: { message?: string }) {
   return message ? <p className="text-sm text-destructive">{message}</p> : null;
 }
+

@@ -1,4 +1,4 @@
-package com.moneycontrol.mobile.data.repository
+﻿package com.moneycontrol.mobile.data.repository
 
 import com.moneycontrol.mobile.core.config.SupabaseProvider
 import io.github.jan.supabase.auth.auth
@@ -44,7 +44,7 @@ class AuthRepository {
         } catch (_: Exception) {
             AuthResult(
                 signedIn = false,
-                error = "Nao foi possivel entrar.",
+                error = "Não foi possível entrar.",
             )
         }
     }
@@ -75,7 +75,7 @@ class AuthRepository {
         } catch (_: Exception) {
             AuthResult(
                 signedIn = false,
-                error = "Nao foi possivel criar a conta.",
+                error = "Não foi possível criar a conta.",
             )
         }
     }
@@ -91,15 +91,16 @@ class AuthRepository {
 
         return when {
             "invalid_credentials" in normalized -> {
-                "E-mail ou senha invalidos. Se esta conta ja existe no sistema web, confirme se ela tambem existe no Supabase Auth e se a senha esta correta."
+                "E-mail ou senha inválidos. Se esta conta já existe no sistema web, confirme se ela também existe no Supabase Auth e se a senha está correta."
             }
             "email not confirmed" in normalized -> {
-                "Seu e-mail ainda nao foi confirmado."
+                "Seu e-mail ainda não foi confirmado."
             }
             "user already registered" in normalized -> {
-                "Este e-mail ja esta cadastrado. Tente entrar com sua senha."
+                "Este e-mail já está cadastrado. Tente entrar com sua senha."
             }
             else -> message
         }
     }
 }
+

@@ -1,4 +1,4 @@
-import type {
+﻿import type {
   Expense,
   Income,
   Investment,
@@ -31,7 +31,7 @@ export const mockExpenses: Expense[] = [
   },
   {
     id: "exp-3",
-    title: "Combustivel",
+    title: "Combustível",
     amount: 320,
     category: "transporte",
     date: "2026-05-01",
@@ -42,7 +42,7 @@ export const mockExpenses: Expense[] = [
   },
   {
     id: "exp-4",
-    title: "Plano de saude",
+    title: "Plano de saúde",
     amount: 540,
     category: "saude",
     date: "2026-05-10",
@@ -68,7 +68,7 @@ export const mockExpenses: Expense[] = [
     category: "moradia",
     date: "2026-05-03",
     dueDate: "2026-05-03",
-    paymentMethod: "debito automatico",
+    paymentMethod: "débito automático",
     status: "overdue",
   },
 ];
@@ -76,7 +76,7 @@ export const mockExpenses: Expense[] = [
 export const mockIncomes: Income[] = [
   {
     id: "inc-1",
-    title: "Salario",
+    title: "Salário",
     amount: 6500,
     source: "trabalho",
     date: "2026-05-01",
@@ -95,7 +95,7 @@ export const mockIncomes: Income[] = [
   },
   {
     id: "inc-3",
-    title: "Bonus trimestral",
+    title: "Bônus trimestral",
     amount: 900,
     source: "comissao",
     date: "2026-05-07",
@@ -134,3 +134,4 @@ export const monthlyOverview: MonthlyOverviewPoint[] = [
   { month: getMonthLabel(1), income: 7350, expense: 4460, investment: 1300 },
   { month: getMonthLabel(0), income: 8600, expense: 3710, investment: 1850 },
 ];
+

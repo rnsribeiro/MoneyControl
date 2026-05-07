@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { CategoryActions } from "@/components/categories/category-actions";
 import { CategoryKindBadge } from "@/components/categories/category-kind-badge";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -22,7 +22,7 @@ export default async function CategoriesPage() {
     <div className="min-w-0 space-y-6">
       <PageHeader
         title="Categorias"
-        description="Cadastre categorias personalizadas para despesas, receitas e investimentos e use essas opcoes nos formularios."
+        description="Cadastre categorias personalizadas para despesas, receitas e investimentos e use essas opções nos formulários."
         actions={
           <Link href="/categorias/nova" className={buttonVariants({ size: "sm" })}>
             Nova categoria
@@ -33,7 +33,7 @@ export default async function CategoriesPage() {
       {categories.length ? (
         <Card className="min-w-0 border-border/70 bg-white/90 shadow-sm shadow-slate-200/50">
           <CardHeader>
-            <CardTitle className="font-heading text-xl">Categorias disponiveis</CardTitle>
+            <CardTitle className="font-heading text-xl">Categorias disponíveis</CardTitle>
           </CardHeader>
           <CardContent className="min-w-0">
             <Table>
@@ -42,7 +42,7 @@ export default async function CategoriesPage() {
                   <TableHead>Nome</TableHead>
                   <TableHead>Slug</TableHead>
                   <TableHead>Tipo</TableHead>
-                  <TableHead className="w-px whitespace-nowrap text-right">Acoes</TableHead>
+                  <TableHead className="w-px whitespace-nowrap text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -68,7 +68,7 @@ export default async function CategoriesPage() {
       ) : (
         <EmptyState
           title="Nenhuma categoria cadastrada"
-          description="Crie categorias personalizadas para organizar melhor seus lancamentos."
+          description="Crie categorias personalizadas para organizar melhor seus lançamentos."
           ctaHref="/categorias/nova"
           ctaLabel="Cadastrar categoria"
         />
@@ -76,3 +76,4 @@ export default async function CategoriesPage() {
     </div>
   );
 }
+

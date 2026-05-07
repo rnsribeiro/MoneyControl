@@ -14,8 +14,8 @@ export default function RegisterPage() {
             Comece seu painel financeiro com uma estrutura pronta para crescer.
           </h1>
           <p className="max-w-xl text-lg leading-8 text-muted-foreground">
-            Cadastro, lancamentos, dashboards e investimentos ja organizados para um
-            MVP de financas pessoais com base segura.
+            Cadastro, lançamentos, dashboards e investimentos já organizados para um
+            MVP de finanças pessoais com base segura.
           </p>
         </div>
         <div className="flex justify-center lg:justify-end">

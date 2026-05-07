@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { InvestmentActions } from "@/components/investments/investment-actions";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
@@ -23,7 +23,7 @@ export default async function InvestmentsPage() {
     <div className="min-w-0 space-y-6">
       <PageHeader
         title="Investimentos"
-        description="Acompanhe aportes e organize o historico da carteira com uma base preparada para metas e rentabilidade futura."
+        description="Acompanhe aportes e organize o histórico da carteira com uma base preparada para metas e rentabilidade futura."
         actions={
           <Link href="/investimentos/novo" className={buttonVariants({ size: "sm" })}>
             Adicionar aporte
@@ -75,7 +75,7 @@ export default async function InvestmentsPage() {
       ) : (
         <EmptyState
           title="Nenhum investimento registrado"
-          description="Cadastre aportes para visualizar a evolucao do patrimonio e integrar essas informacoes ao dashboard."
+          description="Cadastre aportes para visualizar a evolução do patrimônio e integrar essas informações ao dashboard."
           ctaHref="/investimentos/novo"
           ctaLabel="Cadastrar aporte"
         />
@@ -83,3 +83,4 @@ export default async function InvestmentsPage() {
     </div>
   );
 }
+

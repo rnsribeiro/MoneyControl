@@ -1,4 +1,4 @@
-import { Badge } from "@/components/ui/badge";
+﻿import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -21,16 +21,16 @@ export function RecentTransactions({
   return (
     <Card className="min-w-0 border-border/70 bg-white/85 shadow-sm shadow-slate-200/50">
       <CardHeader className="space-y-1">
-        <CardTitle className="font-heading text-xl">Movimentacoes recentes</CardTitle>
+        <CardTitle className="font-heading text-xl">Movimentações recentes</CardTitle>
         <p className="text-sm text-muted-foreground">
-          Lista consolidada para acompanhar o que mais mudou no periodo.
+          Lista consolidada para acompanhar o que mais mudou no período.
         </p>
       </CardHeader>
       <CardContent className="min-w-0">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Descricao</TableHead>
+              <TableHead>Descrição</TableHead>
               <TableHead>Categoria</TableHead>
               <TableHead>Data</TableHead>
               <TableHead>Status</TableHead>
@@ -73,3 +73,4 @@ export function RecentTransactions({
     </Card>
   );
 }
+

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   Area,
@@ -24,7 +24,7 @@ export function MonthlyOverviewChart({
   return (
     <Card className="border-border/70 bg-white/85 shadow-sm shadow-slate-200/50">
       <CardHeader className="space-y-1">
-        <CardTitle className="font-heading text-xl">Evolucao mensal</CardTitle>
+        <CardTitle className="font-heading text-xl">Evolução mensal</CardTitle>
         <p className="text-sm text-muted-foreground">
           Compare receitas, despesas e aportes para ajustar seu ritmo financeiro.
         </p>
@@ -64,7 +64,7 @@ export function MonthlyOverviewChart({
             </AreaChart>
           ) : (
             <div className="flex h-full items-center justify-center rounded-2xl border border-dashed border-border bg-slate-50 text-sm text-muted-foreground">
-              {data.length ? "Carregando grafico..." : "Sem dados suficientes para o grafico."}
+              {data.length ? "Carregando gráfico..." : "Sem dados suficientes para o gráfico."}
             </div>
           )}
         </div>
@@ -72,3 +72,4 @@ export function MonthlyOverviewChart({
     </Card>
   );
 }
+

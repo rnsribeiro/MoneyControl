@@ -1,24 +1,30 @@
+import Link from "next/link";
 import { DashboardCharts } from "@/components/dashboard/dashboard-charts";
+import { DashboardFilter } from "@/components/dashboard/dashboard-filter";
 import { MetricGrid } from "@/components/dashboard/metric-grid";
 import { RecentTransactions } from "@/components/dashboard/recent-transactions";
 import { MigrationWarning } from "@/app/(app)/dashboard/migration-warning";
 import { PageHeader } from "@/components/shared/page-header";
 import {
-  getDashboardSummary,
-  getExpensesByCategory,
-  getMonthlyOverview,
-  getRecentActivities,
+  getDashboardData,
+  parseDashboardFilter,
 } from "@/lib/services/dashboard.service";
 import { buttonVariants } from "@/components/ui/button";
 import { hasExpenseTableConnection } from "@/lib/services/expenses.service";
-import Link from "next/link";
 
-export default async function DashboardPage() {
-  const [summary, categories, overview, activities, hasTables] = await Promise.all([
-    getDashboardSummary(),
-    getExpensesByCategory(),
-    getMonthlyOverview(),
-    getRecentActivities(),
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{
+    filter?: string | string[];
+    month?: string | string[];
+  }>;
+}) {
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
+  const filter = parseDashboardFilter(resolvedSearchParams);
+
+  const [dashboardData, hasTables] = await Promise.all([
+    getDashboardData(filter),
     hasExpenseTableConnection(),
   ]);
 
@@ -26,7 +32,7 @@ export default async function DashboardPage() {
     <div className="min-w-0 space-y-6">
       <PageHeader
         title="Dashboard"
-        description="Visao consolidada do periodo para acompanhar saldo, categorias com maior impacto e ritmo dos aportes."
+        description="Visão consolidada para acompanhar saldo, categorias com maior impacto e ritmo dos aportes."
         actions={
           <>
             <Link
@@ -47,10 +53,19 @@ export default async function DashboardPage() {
           </>
         }
       />
+      <DashboardFilter
+        filter={dashboardData.filter}
+        monthOptions={dashboardData.monthOptions}
+      />
       {!hasTables ? <MigrationWarning /> : null}
-      <MetricGrid summary={summary} />
-      <DashboardCharts overview={overview} categories={categories} />
-      <RecentTransactions activities={activities} />
+      <MetricGrid summary={dashboardData.summary} />
+      <DashboardCharts
+        summary={dashboardData.summary}
+        overview={dashboardData.overview}
+        expenseCategories={dashboardData.expenseCategories}
+        incomeSources={dashboardData.incomeSources}
+      />
+      <RecentTransactions activities={dashboardData.activities} />
     </div>
   );
 }

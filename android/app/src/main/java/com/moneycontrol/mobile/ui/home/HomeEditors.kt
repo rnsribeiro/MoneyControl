@@ -1,4 +1,4 @@
-package com.moneycontrol.mobile.ui.home
+﻿package com.moneycontrol.mobile.ui.home
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -176,7 +176,7 @@ fun ExpenseEditorDialog(
     }
     var paymentMethod by remember(initial) { mutableStateOf(initial?.paymentMethod.orEmpty()) }
     var dueDate by remember(initial) { mutableStateOf(initial?.dueDate ?: today()) }
-    var status by remember(initial) { mutableStateOf(initial?.status ?: "pending") }
+    var status by remember(initial) { mutableStateOf(initial?.status ?: "paid") }
     var notes by remember(initial) { mutableStateOf(initial?.notes.orEmpty()) }
     var error by remember { mutableStateOf<String?>(null) }
 
@@ -187,7 +187,7 @@ fun ExpenseEditorDialog(
         onSave = {
             val parsedAmount = amount.toDoubleOrNull()
             when {
-                title.trim().length < 3 -> error = "Informe uma descricao com pelo menos 3 caracteres."
+                title.trim().length < 3 -> error = "Informe uma descrição com pelo menos 3 caracteres."
                 parsedAmount == null || parsedAmount <= 0.0 -> error = "Informe um valor maior que zero."
                 category.isBlank() -> error = "Selecione uma categoria."
                 paymentMethod.trim().isBlank() -> error = "Informe a forma de pagamento."
@@ -213,7 +213,7 @@ fun ExpenseEditorDialog(
             return@EditorDialog
         }
 
-        EditorTextField(title, { title = it; error = null }, "Descricao", "Ex.: Mercado da semana")
+        EditorTextField(title, { title = it; error = null }, "Descrição", "Ex.: Mercado da semana")
         EditorTextField(
             value = amount,
             onValueChange = { amount = it; error = null },
@@ -231,7 +231,7 @@ fun ExpenseEditorDialog(
             value = paymentMethod,
             onValueChange = { paymentMethod = it; error = null },
             label = "Pagamento",
-            placeholder = "Pix, debito, boleto...",
+            placeholder = "Pix, débito, boleto...",
         )
         EditorTextField(
             value = dueDate,
@@ -248,8 +248,8 @@ fun ExpenseEditorDialog(
         EditorTextField(
             value = notes,
             onValueChange = { notes = it },
-            label = "Observacoes",
-            placeholder = "Contexto adicional, recorrencia ou lembrete.",
+            label = "Observações",
+            placeholder = "Contexto adicional, recorrência ou lembrete.",
             singleLine = false,
         )
         error?.let { ErrorText(it) }
@@ -281,7 +281,7 @@ fun IncomeEditorDialog(
         onSave = {
             val parsedAmount = amount.toDoubleOrNull()
             when {
-                title.trim().length < 3 -> error = "Informe uma descricao com pelo menos 3 caracteres."
+                title.trim().length < 3 -> error = "Informe uma descrição com pelo menos 3 caracteres."
                 parsedAmount == null || parsedAmount <= 0.0 -> error = "Informe um valor maior que zero."
                 source.isBlank() -> error = "Selecione a origem da receita."
                 date.isBlank() -> error = "Informe a data da receita."
@@ -305,7 +305,7 @@ fun IncomeEditorDialog(
             return@EditorDialog
         }
 
-        EditorTextField(title, { title = it; error = null }, "Descricao", "Ex.: Salario mensal")
+        EditorTextField(title, { title = it; error = null }, "Descrição", "Ex.: Salário mensal")
         EditorTextField(
             value = amount,
             onValueChange = { amount = it; error = null },
@@ -334,8 +334,8 @@ fun IncomeEditorDialog(
         EditorTextField(
             value = notes,
             onValueChange = { notes = it },
-            label = "Observacoes",
-            placeholder = "Detalhes sobre a origem ou recorrencia.",
+            label = "Observações",
+            placeholder = "Detalhes sobre a origem ou recorrência.",
             singleLine = false,
         )
         error?.let { ErrorText(it) }
@@ -428,8 +428,8 @@ fun InvestmentEditorDialog(
         EditorTextField(
             value = notes,
             onValueChange = { notes = it },
-            label = "Observacoes",
-            placeholder = "Observacoes sobre o aporte ou estrategia.",
+            label = "Observações",
+            placeholder = "Observações sobre o aporte ou estratégia.",
             singleLine = false,
         )
         error?.let { ErrorText(it) }
@@ -564,3 +564,4 @@ private fun slugify(value: String): String {
 }
 
 private fun today(): String = java.time.LocalDate.now().toString()
+

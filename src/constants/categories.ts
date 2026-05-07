@@ -1,24 +1,24 @@
-export const expenseCategories = [
+﻿export const expenseCategories = [
   { value: "moradia", label: "Moradia" },
-  { value: "alimentacao", label: "Alimentacao" },
+  { value: "alimentacao", label: "Alimentação" },
   { value: "transporte", label: "Transporte" },
-  { value: "saude", label: "Saude" },
+  { value: "saude", label: "Saúde" },
   { value: "lazer", label: "Lazer" },
-  { value: "educacao", label: "Educacao" },
+  { value: "educacao", label: "Educação" },
 ] as const;
 
 export const investmentTypes = [
   { value: "tesouro", label: "Tesouro Direto" },
-  { value: "acoes", label: "Acoes" },
-  { value: "fii", label: "Fundos Imobiliarios" },
+  { value: "acoes", label: "Ações" },
+  { value: "fii", label: "Fundos Imobiliários" },
   { value: "cripto", label: "Criptoativos" },
-  { value: "reserva", label: "Reserva de emergencia" },
+  { value: "reserva", label: "Reserva de emergência" },
 ] as const;
 
 export const incomeSources = [
-  { value: "salario", label: "Salario" },
+  { value: "salario", label: "Salário" },
   { value: "freelance", label: "Freelance" },
-  { value: "comissao", label: "Comissao" },
+  { value: "comissao", label: "Comissão" },
   { value: "rendimento", label: "Rendimento" },
   { value: "outros", label: "Outros" },
 ] as const;
@@ -28,3 +28,4 @@ export const categoryKinds = [
   { value: "income", label: "Receita" },
   { value: "investment", label: "Investimento" },
 ] as const;
+

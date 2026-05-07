@@ -1,4 +1,4 @@
-import { BrandLogo } from "@/components/shared/brand-logo";
+﻿import { BrandLogo } from "@/components/shared/brand-logo";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -19,7 +19,7 @@ export default function Home() {
           <div>
             <BrandLogo className="h-16" priority />
             <p className="text-sm text-muted-foreground">
-              Despesas, investimentos e dashboards em um unico lugar.
+              Despesas, investimentos e dashboards em um único lugar.
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -35,14 +35,14 @@ export default function Home() {
         <section className="grid flex-1 items-center gap-10 py-16 lg:grid-cols-[1.2fr_0.8fr]">
           <div className="space-y-8">
             <span className="inline-flex rounded-full border border-primary/20 bg-white/80 px-4 py-1 text-sm font-medium text-primary shadow-sm backdrop-blur">
-              Controle financeiro com foco em clareza e acao
+              Controle financeiro com foco em clareza e ação
             </span>
             <div className="space-y-4">
               <h1 className="max-w-3xl font-heading text-5xl font-bold tracking-tight text-balance text-foreground lg:text-6xl">
-                Visualize seus gastos, organize seus aportes e tome decisoes com seguranca.
+                Visualize seus gastos, organize seus aportes e tome decisões com segurança.
               </h1>
               <p className="max-w-2xl text-lg leading-8 text-muted-foreground">
-                O MoneyControl foi pensado para transformar movimentacoes do dia a dia
+                O MoneyControl foi pensado para transformar movimentações do dia a dia
                 em um painel claro: saldo, categorias, investimentos e metas sempre a
                 um clique.
               </p>
@@ -69,8 +69,8 @@ export default function Home() {
             <div className="grid gap-4 sm:grid-cols-3">
               <FeatureCard
                 icon={<Wallet className="size-5 text-primary" />}
-                title="Gestao de gastos"
-                description="Registre despesas, acompanhe categorias e monitore variacoes."
+                title="Gestão de gastos"
+                description="Registre despesas, acompanhe categorias e monitore variações."
               />
               <FeatureCard
                 icon={<PiggyBank className="size-5 text-primary" />}
@@ -80,7 +80,7 @@ export default function Home() {
               <FeatureCard
                 icon={<BarChart3 className="size-5 text-primary" />}
                 title="Dashboards"
-                description="Cards e graficos para entender seu dinheiro sem planilhas soltas."
+                description="Cards e gráficos para entender seu dinheiro sem planilhas soltas."
               />
             </div>
           </div>
@@ -89,9 +89,9 @@ export default function Home() {
             <CardHeader className="border-b border-border/60 bg-slate-950 px-6 py-5 text-slate-50">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="font-heading text-xl">Visao do mes</CardTitle>
+                  <CardTitle className="font-heading text-xl">Visão do mês</CardTitle>
                   <p className="mt-1 text-sm text-slate-300">
-                    Resumo rapido com foco em saldo, gastos e investimentos.
+                    Resumo rápido com foco em saldo, gastos e investimentos.
                   </p>
                 </div>
                 <span className="inline-flex items-center gap-2 rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-medium text-emerald-300">
@@ -103,23 +103,23 @@ export default function Home() {
             <CardContent className="space-y-6 p-6">
               <div className="grid gap-4 md:grid-cols-2">
                 <MetricPreview label="Saldo atual" value="R$ 7.450,00" accent="text-emerald-600" />
-                <MetricPreview label="Investido no mes" value="R$ 1.850,00" accent="text-sky-600" />
+                <MetricPreview label="Investido no mês" value="R$ 1.850,00" accent="text-sky-600" />
                 <MetricPreview label="Despesas fixas" value="R$ 2.930,00" accent="text-rose-600" />
-                <MetricPreview label="Taxa de poupanca" value="28%" accent="text-amber-600" />
+                <MetricPreview label="Taxa de poupança" value="28%" accent="text-amber-600" />
               </div>
               <div className="rounded-2xl border border-border/70 bg-slate-50 p-4">
                 <div className="mb-4 flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-slate-700">Categorias com mais impacto</p>
                     <p className="text-xs text-muted-foreground">
-                      Alimentacao, moradia e transporte concentraram 67% dos gastos.
+                      Alimentação, moradia e transporte concentraram 67% dos gastos.
                     </p>
                   </div>
                   <span className="text-xs font-medium text-muted-foreground">Abril</span>
                 </div>
                 <div className="space-y-3">
                   <ProgressPreview label="Moradia" value="42%" width="w-[42%]" tone="bg-primary" />
-                  <ProgressPreview label="Alimentacao" value="16%" width="w-[16%]" tone="bg-sky-500" />
+                  <ProgressPreview label="Alimentação" value="16%" width="w-[16%]" tone="bg-sky-500" />
                   <ProgressPreview label="Transporte" value="9%" width="w-[9%]" tone="bg-amber-500" />
                 </div>
               </div>
@@ -195,3 +195,4 @@ function ProgressPreview({
     </div>
   );
 }
+

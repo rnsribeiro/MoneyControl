@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -27,6 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { getLocalDateInputValue } from "@/utils/date";
 
 export function ExpenseForm({
   categoryOptions,
@@ -53,9 +54,9 @@ export function ExpenseForm({
       title: initialValues?.title ?? "",
       amount: initialValues?.amount ?? 0,
       category: initialValues?.category ?? resolvedCategoryOptions[0]?.value ?? "",
-      dueDate: initialValues?.dueDate ?? new Date().toISOString().slice(0, 10),
+      dueDate: initialValues?.dueDate ?? getLocalDateInputValue(),
       paymentMethod: initialValues?.paymentMethod ?? "",
-      status: initialValues?.status ?? "pending",
+      status: initialValues?.status ?? "paid",
       notes: initialValues?.notes ?? "",
     },
   });
@@ -69,7 +70,7 @@ export function ExpenseForm({
     const supabase = createSupabaseBrowserClient();
 
     if (!supabase) {
-      toast.error("Supabase nao configurado.");
+      toast.error("Supabase não configurado.");
       setIsSubmitting(false);
       return;
     }
@@ -79,8 +80,8 @@ export function ExpenseForm({
     } = await supabase.auth.getUser();
 
     if (!user) {
-      toast.error("Sessao nao encontrada.", {
-        description: "Faca login para salvar suas despesas.",
+      toast.error("Sessão não encontrada.", {
+        description: "Faça login para salvar suas despesas.",
       });
       setIsSubmitting(false);
       return;
@@ -104,7 +105,7 @@ export function ExpenseForm({
       : await supabase.from(MC_TABLES.expenses).insert(payload);
 
     if (error) {
-      toast.error("Nao foi possivel salvar a despesa.", {
+      toast.error("Não foi possível salvar a despesa.", {
         description: error.message,
       });
       setIsSubmitting(false);
@@ -124,9 +125,9 @@ export function ExpenseForm({
       title: initialValues?.title ?? "",
       amount: initialValues?.amount ?? 0,
       category: initialValues?.category ?? resolvedCategoryOptions[0]?.value ?? "",
-      dueDate: initialValues?.dueDate ?? new Date().toISOString().slice(0, 10),
+      dueDate: initialValues?.dueDate ?? getLocalDateInputValue(),
       paymentMethod: initialValues?.paymentMethod ?? "",
-      status: initialValues?.status ?? "pending",
+      status: initialValues?.status ?? "paid",
       notes: initialValues?.notes ?? "",
     });
     router.push("/despesas");
@@ -142,7 +143,7 @@ export function ExpenseForm({
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <div className="grid gap-5 md:grid-cols-2">
             <Field>
-              <Label htmlFor="title">Descricao</Label>
+              <Label htmlFor="title">Descrição</Label>
               <Input id="title" placeholder="Ex.: Mercado da semana" {...form.register("title")} />
               <FieldError message={form.formState.errors.title?.message} />
             </Field>
@@ -182,7 +183,7 @@ export function ExpenseForm({
             </Field>
             <Field>
               <Label htmlFor="paymentMethod">Pagamento</Label>
-              <Input id="paymentMethod" placeholder="Pix, debito, boleto..." {...form.register("paymentMethod")} />
+              <Input id="paymentMethod" placeholder="Pix, débito, boleto..." {...form.register("paymentMethod")} />
               <FieldError message={form.formState.errors.paymentMethod?.message} />
             </Field>
             <Field className="md:col-span-2">
@@ -210,10 +211,10 @@ export function ExpenseForm({
               <FieldError message={form.formState.errors.status?.message} />
             </Field>
             <Field className="md:col-span-2">
-              <Label htmlFor="notes">Observacoes</Label>
+              <Label htmlFor="notes">Observações</Label>
               <Textarea
                 id="notes"
-                placeholder="Contexto adicional, recorrencia, meta ou lembrete."
+                placeholder="Contexto adicional, recorrência, meta ou lembrete."
                 {...form.register("notes")}
               />
               <FieldError message={form.formState.errors.notes?.message} />
@@ -224,7 +225,7 @@ export function ExpenseForm({
               {isSubmitting
                 ? "Salvando..."
                 : initialValues?.id
-                  ? "Salvar alteracoes"
+                  ? "Salvar alterações"
                   : "Salvar despesa"}
             </Button>
             <Button type="button" variant="outline" onClick={() => form.reset()}>
@@ -250,3 +251,4 @@ function Field({
 function FieldError({ message }: { message?: string }) {
   return message ? <p className="text-sm text-destructive">{message}</p> : null;
 }
+

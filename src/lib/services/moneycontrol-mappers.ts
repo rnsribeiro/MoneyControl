@@ -1,4 +1,5 @@
 import type { Expense, Income, Investment } from "@/types/finance";
+import { compareDateOnly, getLocalDateInputValue } from "@/utils/date";
 
 export function mapExpenseRow(row: {
   id: string;
@@ -15,7 +16,7 @@ export function mapExpenseRow(row: {
   const dueDate = row.due_date ?? row.expense_date;
   const isOverdue =
     row.status !== "paid" &&
-    new Date(dueDate).setHours(0, 0, 0, 0) < new Date().setHours(0, 0, 0, 0);
+    compareDateOnly(dueDate, getLocalDateInputValue()) < 0;
 
   return {
     id: row.id,

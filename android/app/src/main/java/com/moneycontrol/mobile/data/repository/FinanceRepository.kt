@@ -1,4 +1,4 @@
-package com.moneycontrol.mobile.data.repository
+﻿package com.moneycontrol.mobile.data.repository
 
 import com.moneycontrol.mobile.core.config.SupabaseProvider
 import com.moneycontrol.mobile.data.model.CategoryInsert
@@ -183,7 +183,7 @@ class FinanceRepository {
         val session = supabase.auth.currentSessionOrNull()
         val userId = session?.user?.id
         if (userId.isNullOrBlank()) {
-            throw IllegalStateException("Sessao nao encontrada.")
+            throw IllegalStateException("Sessão não encontrada.")
         }
         return userId
     }
@@ -274,3 +274,4 @@ class FinanceRepository {
 
     private fun today(): String = java.time.LocalDate.now().toString()
 }
+

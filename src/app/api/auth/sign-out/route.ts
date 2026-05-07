@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function POST() {
@@ -7,7 +7,7 @@ export async function POST() {
   if (!supabase) {
     return NextResponse.json(
       {
-        error: "Supabase nao configurado no servidor.",
+        error: "Supabase não configurado no servidor.",
       },
       { status: 500 },
     );
@@ -26,3 +26,4 @@ export async function POST() {
 
   return NextResponse.json({ ok: true });
 }
+

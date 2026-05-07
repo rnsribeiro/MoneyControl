@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { MC_TABLES } from "@/lib/supabase/tables";
+import { getLocalDateInputValue } from "@/utils/date";
 
 export async function PATCH(
   request: Request,
@@ -9,7 +10,7 @@ export async function PATCH(
   const supabase = await createSupabaseServerClient();
 
   if (!supabase) {
-    return NextResponse.json({ error: "Supabase nao configurado." }, { status: 500 });
+    return NextResponse.json({ error: "Supabase não configurado." }, { status: 500 });
   }
 
   const {
@@ -17,19 +18,19 @@ export async function PATCH(
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json({ error: "Sessao nao encontrada." }, { status: 401 });
+    return NextResponse.json({ error: "Sessão não encontrada." }, { status: 401 });
   }
 
   const { id } = await context.params;
   const { status } = (await request.json()) as { status?: "paid" | "pending" };
 
   if (!status) {
-    return NextResponse.json({ error: "Status invalido." }, { status: 400 });
+    return NextResponse.json({ error: "Status inválido." }, { status: 400 });
   }
 
   const payload = {
     status,
-    paid_at: status === "paid" ? new Date().toISOString().slice(0, 10) : null,
+    paid_at: status === "paid" ? getLocalDateInputValue() : null,
   };
 
   const { error } = await supabase

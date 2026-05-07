@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { CalendarDays, CircleUserRound } from "lucide-react";
 import { SignOutButton } from "@/components/layout/sign-out-button";
 import { buttonVariants } from "@/components/ui/button";
@@ -29,7 +29,7 @@ export function AppHeader({
         </div>
         <p className="text-sm text-muted-foreground">
           {isSupabaseReady
-            ? "Supabase conectado. Ambiente pronto para autenticacao e dados reais."
+            ? "Supabase conectado. Ambiente pronto para autenticação e dados reais."
             : "Preencha .env.local para substituir os dados de exemplo por dados reais."}
         </p>
       </div>
@@ -49,3 +49,4 @@ export function AppHeader({
     </header>
   );
 }
+

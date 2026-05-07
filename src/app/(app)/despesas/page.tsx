@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { ExpenseActions } from "@/components/expenses/expense-actions";
 import { ExpenseOverview } from "@/components/expenses/expense-overview";
 import { ExpenseStatusBadge } from "@/components/expenses/expense-status-badge";
@@ -39,13 +39,13 @@ export default async function ExpensesPage() {
       {expenses.length ? (
         <Card className="min-w-0 border-border/70 bg-white/90 shadow-sm shadow-slate-200/50">
           <CardHeader>
-            <CardTitle className="font-heading text-xl">Contas do periodo</CardTitle>
+            <CardTitle className="font-heading text-xl">Contas do período</CardTitle>
           </CardHeader>
           <CardContent className="min-w-0">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Descricao</TableHead>
+                  <TableHead>Descrição</TableHead>
                   <TableHead>Categoria</TableHead>
                   <TableHead>Pagamento</TableHead>
                   <TableHead>Vencimento</TableHead>
@@ -64,7 +64,7 @@ export default async function ExpensesPage() {
                     <TableCell className="capitalize">{expense.paymentMethod}</TableCell>
                     <TableCell>{formatDate(expense.dueDate)}</TableCell>
                     <TableCell>
-                      {expense.paidAt ? formatDate(expense.paidAt) : "Ainda nao"}
+                      {expense.paidAt ? formatDate(expense.paidAt) : "Ainda não"}
                     </TableCell>
                     <TableCell>
                       <ExpenseStatusBadge status={expense.status} />
@@ -87,7 +87,7 @@ export default async function ExpensesPage() {
       ) : (
         <EmptyState
           title="Nenhuma despesa registrada"
-          description="Comece cadastrando a primeira movimentacao para popular tabelas, cards e graficos."
+          description="Comece cadastrando a primeira movimentação para popular tabelas, cards e gráficos."
           ctaHref="/despesas/nova"
           ctaLabel="Cadastrar despesa"
         />
@@ -95,3 +95,4 @@ export default async function ExpensesPage() {
     </div>
   );
 }
+

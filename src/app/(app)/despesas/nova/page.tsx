@@ -1,4 +1,4 @@
-import { ExpenseForm } from "@/components/forms/expense-form";
+﻿import { ExpenseForm } from "@/components/forms/expense-form";
 import { PageHeader } from "@/components/shared/page-header";
 import { listCategories } from "@/lib/services/categories.service";
 
@@ -9,9 +9,10 @@ export default async function NewExpensePage() {
     <div className="space-y-6">
       <PageHeader
         title="Cadastrar despesa"
-        description="Formulario com validacao pronta para receber persistencia via Server Action ou route handler com Supabase."
+        description="Formulário com validação pronta para receber persistência via Server Action ou route handler com Supabase."
       />
       <ExpenseForm categoryOptions={categoryOptions} />
     </div>
   );
 }
+

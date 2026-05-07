@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -19,7 +19,7 @@ export function IncomeActions({
 
   async function handleDelete() {
     const confirmed = window.confirm(
-      `Excluir a receita "${incomeTitle}"? Essa acao nao pode ser desfeita.`,
+      `Excluir a receita "${incomeTitle}"? Essa ação não pode ser desfeita.`,
     );
 
     if (!confirmed) {
@@ -29,20 +29,20 @@ export function IncomeActions({
     const supabase = createSupabaseBrowserClient();
 
     if (!supabase) {
-      toast.error("Supabase nao configurado.");
+      toast.error("Supabase não configurado.");
       return;
     }
 
     const { error } = await supabase.from(MC_TABLES.incomes).delete().eq("id", incomeId);
 
     if (error) {
-      toast.error("Nao foi possivel excluir a receita.", {
+      toast.error("Não foi possível excluir a receita.", {
         description: error.message,
       });
       return;
     }
 
-    toast.success("Receita excluida com sucesso.");
+    toast.success("Receita excluída com sucesso.");
     router.refresh();
   }
 
@@ -71,3 +71,4 @@ export function IncomeActions({
     </div>
   );
 }
+

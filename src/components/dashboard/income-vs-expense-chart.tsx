@@ -1,16 +1,39 @@
-﻿"use client";
+"use client";
 
-import { Pie, PieChart, Tooltip, Cell } from "recharts";
+import { Cell, Pie, PieChart, Tooltip } from "recharts";
 import { useElementSize } from "@/hooks/use-element-size";
-import type { CategoryBreakdown } from "@/types/finance";
+import type { CategoryBreakdown, DashboardSummary } from "@/types/finance";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/utils/currency";
 
-export function ExpensesByCategoryChart({
-  data,
+function buildChartData(summary: DashboardSummary): CategoryBreakdown[] {
+  const items = [
+    {
+      category: "Receitas",
+      total: summary.totalIncome,
+      color: "var(--chart-1)",
+    },
+    {
+      category: "Despesas",
+      total: summary.totalExpenses,
+      color: "var(--chart-4)",
+    },
+  ].filter((item) => item.total > 0);
+
+  const grandTotal = items.reduce((sum, item) => sum + item.total, 0);
+
+  return items.map((item) => ({
+    ...item,
+    percentage: grandTotal ? Math.round((item.total / grandTotal) * 100) : 0,
+  }));
+}
+
+export function IncomeVsExpenseChart({
+  summary,
 }: {
-  data: CategoryBreakdown[];
+  summary: DashboardSummary;
 }) {
+  const data = buildChartData(summary);
   const { ref, size } = useElementSize<HTMLDivElement>();
   const canRenderChart = size.width > 0 && size.height > 0 && data.length > 0;
   const chartSize = Math.min(size.width, size.height);
@@ -20,13 +43,16 @@ export function ExpensesByCategoryChart({
   return (
     <Card className="border-border/70 bg-white/85 shadow-sm shadow-slate-200/50">
       <CardHeader className="space-y-1">
-        <CardTitle className="font-heading text-xl">Gastos por categoria</CardTitle>
+        <CardTitle className="font-heading text-xl">Receitas x despesas</CardTitle>
         <p className="text-sm text-muted-foreground">
-          Entenda rapidamente onde seu dinheiro está concentrado.
+          Compare rapidamente o volume total de entradas e saídas no período.
         </p>
       </CardHeader>
       <CardContent className="grid min-w-0 gap-6 lg:grid-cols-[minmax(280px,1fr)_minmax(0,1fr)] 2xl:grid-cols-[minmax(260px,0.9fr)_minmax(0,1.1fr)]">
-        <div ref={ref} className="flex h-80 min-w-0 items-center justify-center rounded-[28px] bg-slate-50/70 px-4 py-4">
+        <div
+          ref={ref}
+          className="flex h-80 min-w-0 items-center justify-center rounded-[28px] bg-slate-50/70 px-4 py-4"
+        >
           {canRenderChart ? (
             <PieChart width={size.width} height={size.height}>
               <Pie
@@ -47,7 +73,7 @@ export function ExpensesByCategoryChart({
             </PieChart>
           ) : (
             <div className="flex h-full items-center justify-center rounded-2xl border border-dashed border-border bg-slate-50 text-sm text-muted-foreground">
-              {data.length ? "Carregando gráfico..." : "Sem dados suficientes para o gráfico."}
+              Sem dados suficientes para o gráfico.
             </div>
           )}
         </div>
@@ -64,9 +90,9 @@ export function ExpensesByCategoryChart({
                     style={{ backgroundColor: item.color }}
                   />
                   <div className="min-w-0">
-                    <p className="truncate font-medium capitalize">{item.category}</p>
+                    <p className="truncate font-medium">{item.category}</p>
                     <p className="text-sm text-muted-foreground">
-                      {item.percentage}% do total de gastos
+                      {item.percentage}% do total comparado
                     </p>
                   </div>
                 </div>
@@ -81,4 +107,3 @@ export function ExpensesByCategoryChart({
     </Card>
   );
 }
-

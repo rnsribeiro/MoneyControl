@@ -1,4 +1,4 @@
-import {
+﻿import {
   CircleDollarSign,
   Landmark,
   PiggyBank,
@@ -20,7 +20,7 @@ export function MetricGrid({ summary }: { summary: DashboardSummary }) {
       <SummaryCard
         title="Recebido"
         value={summary.receivedIncome}
-        hint="Receitas que ja entraram no caixa."
+        hint="Receitas que já entraram no caixa."
         icon={Landmark}
       />
       <SummaryCard
@@ -32,16 +32,17 @@ export function MetricGrid({ summary }: { summary: DashboardSummary }) {
       <SummaryCard
         title="Despesas pagas"
         value={summary.paidExpenses}
-        hint={`${summary.pendingExpenses > 0 ? "Ainda ha contas pendentes." : "Tudo quitado no periodo."}`}
+        hint={`${summary.pendingExpenses > 0 ? "Ainda há contas pendentes." : "Tudo quitado no período."}`}
         trend="down"
         icon={TrendingDown}
       />
       <SummaryCard
         title="Investimentos"
         value={summary.totalInvested}
-        hint={`${summary.savingsRate}% do recebido foi para patrimonio.`}
+        hint={`${summary.savingsRate}% do recebido foi para patrimônio.`}
         icon={PiggyBank}
       />
     </div>
   );
 }
+

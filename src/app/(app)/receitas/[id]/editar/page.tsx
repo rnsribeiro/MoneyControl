@@ -23,7 +23,7 @@ export default async function EditIncomePage({
     <div className="space-y-6">
       <PageHeader
         title="Editar receita"
-        description="Atualize descricao, origem, data e status da receita."
+        description="Atualize descrição, origem, data e status da receita."
       />
       <IncomeForm
         sourceOptions={sourceOptions}

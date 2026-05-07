@@ -1,4 +1,4 @@
-package com.moneycontrol.mobile.ui.home
+﻿package com.moneycontrol.mobile.ui.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -61,7 +61,7 @@ class HomeViewModel(
             }.onFailure {
                 _uiState.value = _uiState.value.copy(
                     loading = false,
-                    loadError = "Nao foi possivel carregar os dados financeiros.",
+                    loadError = "Não foi possível carregar os dados financeiros.",
                 )
             }
         }
@@ -79,7 +79,7 @@ class HomeViewModel(
         financeRepository.updateCategory(id, input)
     }
 
-    fun deleteCategory(id: String) = performMutation("Categoria excluida com sucesso.") {
+    fun deleteCategory(id: String) = performMutation("Categoria excluída com sucesso.") {
         financeRepository.deleteCategory(id)
     }
 
@@ -97,7 +97,7 @@ class HomeViewModel(
         financeRepository.updateExpenseStatus(id, status)
     }
 
-    fun deleteExpense(id: String) = performMutation("Despesa excluida com sucesso.") {
+    fun deleteExpense(id: String) = performMutation("Despesa excluída com sucesso.") {
         financeRepository.deleteExpense(id)
     }
 
@@ -109,7 +109,7 @@ class HomeViewModel(
         financeRepository.updateIncome(id, input)
     }
 
-    fun deleteIncome(id: String) = performMutation("Receita excluida com sucesso.") {
+    fun deleteIncome(id: String) = performMutation("Receita excluída com sucesso.") {
         financeRepository.deleteIncome(id)
     }
 
@@ -121,7 +121,7 @@ class HomeViewModel(
         financeRepository.updateInvestment(id, input)
     }
 
-    fun deleteInvestment(id: String) = performMutation("Investimento excluido com sucesso.") {
+    fun deleteInvestment(id: String) = performMutation("Investimento excluído com sucesso.") {
         financeRepository.deleteInvestment(id)
     }
 
@@ -156,7 +156,7 @@ class HomeViewModel(
             }.onFailure { error ->
                 _uiState.value = _uiState.value.copy(
                     submitting = false,
-                    feedbackMessage = error.message ?: "Nao foi possivel concluir a operacao.",
+                    feedbackMessage = error.message ?: "Não foi possível concluir a operação.",
                 )
             }
         }
@@ -246,3 +246,4 @@ class HomeViewModelFactory(
         return HomeViewModel(financeRepository, authRepository) as T
     }
 }
+

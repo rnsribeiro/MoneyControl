@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
@@ -19,8 +19,8 @@ export function SignOutButton() {
     };
 
     if (!response.ok) {
-      toast.error("Nao foi possivel sair.", {
-        description: payload.error ?? "Erro ao encerrar a sessao.",
+      toast.error("Não foi possível sair.", {
+        description: payload.error ?? "Erro ao encerrar a sessão.",
       });
       return;
     }
@@ -36,3 +36,4 @@ export function SignOutButton() {
     </Button>
   );
 }
+

@@ -4,6 +4,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { MC_TABLES } from "@/lib/supabase/tables";
 import { mapExpenseRow } from "@/lib/services/moneycontrol-mappers";
 import type { Expense } from "@/types/finance";
+import { parseDateOnly } from "@/utils/date";
 
 export async function listExpenses(): Promise<Expense[]> {
   const supabase = await createSupabaseServerClient();
@@ -62,8 +63,8 @@ export function getExpenseOverview(expenses: Expense[]): ExpenseOverview {
 
   return expenses.reduce<ExpenseOverview>(
     (acc, expense) => {
-      const dueDate = new Date(expense.dueDate);
-      const paidDate = expense.paidAt ? new Date(expense.paidAt) : null;
+      const dueDate = parseDateOnly(expense.dueDate);
+      const paidDate = expense.paidAt ? parseDateOnly(expense.paidAt) : null;
 
       if (
         expense.status === "paid" &&

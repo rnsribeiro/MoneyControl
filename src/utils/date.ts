@@ -1,9 +1,38 @@
+export function parseDateOnly(date: string) {
+  const [year, month, day] = date.split("-").map(Number);
+
+  if (!year || !month || !day) {
+    return new Date(date);
+  }
+
+  return new Date(year, month - 1, day);
+}
+
+export function getLocalDateInputValue(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+export function getCurrentMonthKey(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+
+  return `${year}-${month}`;
+}
+
+export function compareDateOnly(a: string, b: string) {
+  return parseDateOnly(a).getTime() - parseDateOnly(b).getTime();
+}
+
 export function formatDate(date: string) {
   return new Intl.DateTimeFormat("pt-BR", {
     day: "2-digit",
     month: "short",
     year: "numeric",
-  }).format(new Date(date));
+  }).format(parseDateOnly(date));
 }
 
 export function getMonthLabel(offset: number) {
@@ -16,7 +45,8 @@ export function getMonthLabel(offset: number) {
 }
 
 export function getMonthKey(dateInput: string | Date) {
-  const date = new Date(dateInput);
+  const date =
+    typeof dateInput === "string" ? parseDateOnly(dateInput) : dateInput;
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   return `${year}-${month}`;
@@ -40,5 +70,15 @@ export function formatMonthKey(monthKey: string) {
 
   return new Intl.DateTimeFormat("pt-BR", {
     month: "short",
+  }).format(date);
+}
+
+export function formatMonthKeyLong(monthKey: string) {
+  const [year, month] = monthKey.split("-").map(Number);
+  const date = new Date(year, month - 1, 1);
+
+  return new Intl.DateTimeFormat("pt-BR", {
+    month: "long",
+    year: "numeric",
   }).format(date);
 }

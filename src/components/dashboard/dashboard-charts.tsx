@@ -1,7 +1,11 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import type { CategoryBreakdown, MonthlyOverviewPoint } from "@/types/finance";
+import type {
+  CategoryBreakdown,
+  DashboardSummary,
+  MonthlyOverviewPoint,
+} from "@/types/finance";
 
 const MonthlyOverviewChart = dynamic(
   () =>
@@ -19,19 +23,43 @@ const ExpensesByCategoryChart = dynamic(
   { ssr: false },
 );
 
+const IncomeBySourceChart = dynamic(
+  () =>
+    import("@/components/dashboard/income-by-source-chart").then(
+      (module) => module.IncomeBySourceChart,
+    ),
+  { ssr: false },
+);
+
+const IncomeVsExpenseChart = dynamic(
+  () =>
+    import("@/components/dashboard/income-vs-expense-chart").then(
+      (module) => module.IncomeVsExpenseChart,
+    ),
+  { ssr: false },
+);
+
 interface DashboardChartsProps {
+  summary: DashboardSummary;
   overview: MonthlyOverviewPoint[];
-  categories: CategoryBreakdown[];
+  expenseCategories: CategoryBreakdown[];
+  incomeSources: CategoryBreakdown[];
 }
 
 export function DashboardCharts({
+  summary,
   overview,
-  categories,
+  expenseCategories,
+  incomeSources,
 }: DashboardChartsProps) {
   return (
-    <div className="grid gap-6 2xl:grid-cols-[minmax(0,1.08fr)_minmax(420px,0.92fr)]">
+    <div className="grid gap-6">
       <MonthlyOverviewChart data={overview} />
-      <ExpensesByCategoryChart data={categories} />
+      <div className="grid gap-6 2xl:grid-cols-3">
+        <IncomeVsExpenseChart summary={summary} />
+        <ExpensesByCategoryChart data={expenseCategories} />
+        <IncomeBySourceChart data={incomeSources} />
+      </div>
     </div>
   );
 }

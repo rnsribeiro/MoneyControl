@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -12,7 +12,7 @@ export async function POST(request: Request) {
   if (!email || !password) {
     return NextResponse.json(
       {
-        error: "Informe nome, e-mail e senha validos.",
+        error: "Informe nome, e-mail e senha válidos.",
       },
       { status: 400 },
     );
@@ -23,7 +23,7 @@ export async function POST(request: Request) {
   if (!supabase) {
     return NextResponse.json(
       {
-        error: "Supabase nao configurado no servidor.",
+        error: "Supabase não configurado no servidor.",
       },
       { status: 500 },
     );
@@ -46,7 +46,7 @@ export async function POST(request: Request) {
         createError.message.toLowerCase().includes("already") ||
         createError.message.toLowerCase().includes("registered") ||
         createError.message.toLowerCase().includes("exists")
-          ? "Este e-mail ja esta cadastrado. Tente entrar na plataforma com sua senha."
+          ? "Este e-mail já está cadastrado. Tente entrar na plataforma com sua senha."
           : createError.message;
 
       return NextResponse.json(
@@ -106,3 +106,4 @@ export async function POST(request: Request) {
     requiresEmailConfirmation: !data.session,
   });
 }
+

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useState } from "react";
@@ -55,9 +55,9 @@ export function AuthForm({ mode }: AuthFormProps) {
       };
 
       if (!response.ok) {
-        const message = payload.error ?? "Nao foi possivel entrar.";
+        const message = payload.error ?? "Não foi possível entrar.";
         setServerMessage(message);
-        toast.error("Nao foi possivel entrar.", {
+        toast.error("Não foi possível entrar.", {
           description: message,
         });
         setIsSubmitting(false);
@@ -91,9 +91,9 @@ export function AuthForm({ mode }: AuthFormProps) {
     };
 
     if (!response.ok) {
-      const message = payload.error ?? "Nao foi possivel criar a conta.";
+      const message = payload.error ?? "Não foi possível criar a conta.";
       setServerMessage(message);
-      toast.error("Nao foi possivel criar a conta.", {
+      toast.error("Não foi possível criar a conta.", {
         description: message,
       });
       setIsSubmitting(false);
@@ -101,7 +101,7 @@ export function AuthForm({ mode }: AuthFormProps) {
     }
 
     if (payload.autoConfirmed) {
-      toast.success("Conta criada e sessao iniciada.");
+      toast.success("Conta criada e sessão iniciada.");
       router.push("/dashboard");
       router.refresh();
       setIsSubmitting(false);
@@ -110,13 +110,13 @@ export function AuthForm({ mode }: AuthFormProps) {
 
     if (payload.requiresEmailConfirmation) {
       setServerMessage(
-        "Seu projeto Supabase ainda exige confirmacao por e-mail. Se o e-mail nao chegar, revise as configuracoes de Auth do projeto.",
+        "Seu projeto Supabase ainda exige confirmação por e-mail. Se o e-mail não chegar, revise as configurações de Auth do projeto.",
       );
     }
 
     toast.success("Conta criada com sucesso.", {
       description:
-        "Se a confirmacao por e-mail estiver ativa no Supabase, verifique a caixa de entrada e o spam.",
+        "Se a confirmação por e-mail estiver ativa no Supabase, verifique a caixa de entrada e o spam.",
     });
     setIsSubmitting(false);
   }
@@ -129,8 +129,8 @@ export function AuthForm({ mode }: AuthFormProps) {
         </CardTitle>
         <p className="text-sm leading-6 text-muted-foreground">
           {mode === "login"
-            ? "Acesse sua area financeira e acompanhe seu painel em tempo real."
-            : "Comece com uma base pronta para autenticar usuarios via Supabase."}
+            ? "Acesse sua área financeira e acompanhe seu painel em tempo real."
+            : "Comece com uma base pronta para autenticar usuários via Supabase."}
         </p>
       </CardHeader>
       <CardContent>
@@ -144,7 +144,7 @@ export function AuthForm({ mode }: AuthFormProps) {
           ) : null}
           <div className="space-y-2">
             <Label htmlFor="email">E-mail</Label>
-            <Input id="email" type="email" placeholder="voce@email.com" {...form.register("email")} />
+            <Input id="email" type="email" placeholder="voce@exemplo.com" {...form.register("email")} />
             <FieldError message={form.formState.errors.email?.message} />
           </div>
           <div className="space-y-2">
@@ -165,7 +165,7 @@ export function AuthForm({ mode }: AuthFormProps) {
             </p>
           ) : null}
           <p className="text-center text-sm text-muted-foreground">
-            {mode === "login" ? "Ainda nao tem conta?" : "Ja possui uma conta?"}{" "}
+            {mode === "login" ? "Ainda não tem conta?" : "Já possui uma conta?"}{" "}
             <Link
               href={mode === "login" ? "/cadastro" : "/login"}
               className="font-medium text-primary hover:text-primary/80"
@@ -182,3 +182,5 @@ export function AuthForm({ mode }: AuthFormProps) {
 function FieldError({ message }: { message?: string }) {
   return message ? <p className="text-sm text-destructive">{message}</p> : null;
 }
+
+

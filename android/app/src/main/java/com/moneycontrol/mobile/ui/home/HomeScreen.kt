@@ -1,4 +1,4 @@
-package com.moneycontrol.mobile.ui.home
+﻿package com.moneycontrol.mobile.ui.home
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -302,7 +302,7 @@ private fun DashboardTab(
         item {
             FilterHeader(
                 title = "Dashboard",
-                description = "Resumo do seu caixa e das movimentacoes recentes.",
+                description = "Resumo do seu caixa e das movimentações recentes.",
                 selectedFilter = selectedFilter,
                 onFilterSelected = onFilterSelected,
             )
@@ -345,7 +345,7 @@ private fun DashboardTab(
             }
         }
         item {
-            CountCard("Taxa de poupanca", summary.savingsRate)
+            CountCard("Taxa de poupança", summary.savingsRate)
         }
         item {
             TrendChartCard(trendPoints)
@@ -362,7 +362,7 @@ private fun DashboardTab(
         }
         if (recentActivities.isEmpty()) {
             item {
-                EmptyMessage("Nenhuma movimentacao recente encontrada para este periodo.")
+                EmptyMessage("Nenhuma movimentação recente encontrada para este período.")
             }
         } else {
             items(recentActivities, key = { it.id }) { activity ->
@@ -424,7 +424,7 @@ private fun ExpensesTab(
         }
         if (expenses.isEmpty()) {
             item {
-                EmptyMessage("Nenhuma despesa cadastrada para este periodo.")
+                EmptyMessage("Nenhuma despesa cadastrada para este período.")
             }
         } else {
             items(expenses, key = { it.id }) { expense ->
@@ -481,7 +481,7 @@ private fun IncomesTab(
         }
         if (incomes.isEmpty()) {
             item {
-                EmptyMessage("Nenhuma receita cadastrada para este periodo.")
+                EmptyMessage("Nenhuma receita cadastrada para este período.")
             }
         } else {
             items(incomes, key = { it.id }) { income ->
@@ -522,7 +522,7 @@ private fun InvestmentsTab(
             )
         }
         item {
-            SummaryCard("Aportes do periodo", investedAmount)
+            SummaryCard("Aportes do período", investedAmount)
         }
         if (categories.isEmpty()) {
             item {
@@ -531,7 +531,7 @@ private fun InvestmentsTab(
         }
         if (investments.isEmpty()) {
             item {
-                EmptyMessage("Nenhum investimento cadastrado para este periodo.")
+                EmptyMessage("Nenhum investimento cadastrado para este período.")
             }
         } else {
             items(investments, key = { it.id }) { investment ->
@@ -836,7 +836,7 @@ private fun CountCard(label: String, count: Int) {
         ) {
             Text(label, style = MaterialTheme.typography.bodyMedium)
             Text(
-                if (label == "Taxa de poupanca") "$count%" else count.toString(),
+                if (label == "Taxa de poupança") "$count%" else count.toString(),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
             )
@@ -911,3 +911,4 @@ private fun ErrorState(message: String, padding: PaddingValues) {
         )
     }
 }
+

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -18,12 +18,12 @@ export function CategoryActions({
   const router = useRouter();
 
   if (!categoryId) {
-    return <span className="text-xs text-muted-foreground">Padrao do sistema</span>;
+    return <span className="text-xs text-muted-foreground">Padrão do sistema</span>;
   }
 
   async function handleDelete() {
     const confirmed = window.confirm(
-      `Excluir a categoria "${categoryName}"? Essa acao nao pode ser desfeita.`,
+      `Excluir a categoria "${categoryName}"? Essa ação não pode ser desfeita.`,
     );
 
     if (!confirmed) {
@@ -33,7 +33,7 @@ export function CategoryActions({
     const supabase = createSupabaseBrowserClient();
 
     if (!supabase) {
-      toast.error("Supabase nao configurado.");
+      toast.error("Supabase não configurado.");
       return;
     }
 
@@ -43,13 +43,13 @@ export function CategoryActions({
       .eq("id", categoryId);
 
     if (error) {
-      toast.error("Nao foi possivel excluir a categoria.", {
+      toast.error("Não foi possível excluir a categoria.", {
         description: error.message,
       });
       return;
     }
 
-    toast.success("Categoria excluida com sucesso.");
+    toast.success("Categoria excluída com sucesso.");
     router.refresh();
   }
 
@@ -78,3 +78,4 @@ export function CategoryActions({
     </div>
   );
 }
+
