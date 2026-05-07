@@ -4,6 +4,7 @@ import { IncomeActions } from "@/components/incomes/income-actions";
 import { IncomeStatusBadge } from "@/components/incomes/income-status-badge";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
+import { RecordsFilter } from "@/components/shared/records-filter";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -14,16 +15,29 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { getIncomeBySource } from "@/lib/services/dashboard.service";
-import { listIncomes } from "@/lib/services/incomes.service";
+import { getIncomeData, parseIncomeFilters } from "@/lib/services/incomes.service";
 import { formatCurrency } from "@/utils/currency";
 import { formatDate } from "@/utils/date";
 
-export default async function IncomesPage() {
-  const [incomes, incomeSources] = await Promise.all([
-    listIncomes(),
-    getIncomeBySource(),
-  ]);
+const INCOME_STATUS_OPTIONS = [
+  { value: "all", label: "Todos os status" },
+  { value: "received", label: "Somente recebidas" },
+  { value: "expected", label: "Somente a receber" },
+];
+
+export default async function IncomesPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{
+    status?: string | string[];
+    term?: string | string[];
+    startDate?: string | string[];
+    endDate?: string | string[];
+  }>;
+}) {
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
+  const filters = parseIncomeFilters(resolvedSearchParams);
+  const { incomes, sourceBreakdown } = await getIncomeData(filters);
 
   return (
     <div className="min-w-0 space-y-6">
@@ -36,8 +50,16 @@ export default async function IncomesPage() {
           </Link>
         }
       />
+      <RecordsFilter
+        title="Filtro completo de receitas"
+        description="Refine a visualização por status, intervalo de datas e busca por termo para localizar rapidamente qualquer entrada."
+        searchPlaceholder="Descrição, origem ou observação"
+        statusLabel="Status"
+        statusOptions={INCOME_STATUS_OPTIONS}
+        filters={filters}
+      />
 
-      {incomeSources.length ? <IncomeBySourceChart data={incomeSources} /> : null}
+      {sourceBreakdown.length ? <IncomeBySourceChart data={sourceBreakdown} /> : null}
 
       {incomes.length ? (
         <Card className="min-w-0 border-border/70 bg-white/90 shadow-sm shadow-slate-200/50">

@@ -6,6 +6,7 @@ import { ExpenseStatusBadge } from "@/components/expenses/expense-status-badge";
 import { ExpenseStatusToggle } from "@/components/expenses/expense-status-toggle";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
+import { RecordsFilter } from "@/components/shared/records-filter";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -16,13 +17,31 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { getExpenseOverview, listExpenses } from "@/lib/services/expenses.service";
+import { getExpenseData, parseExpenseFilters } from "@/lib/services/expenses.service";
 import { formatCurrency } from "@/utils/currency";
 import { formatDate } from "@/utils/date";
 
-export default async function ExpensesPage() {
-  const expenses = await listExpenses();
-  const overview = getExpenseOverview(expenses);
+const EXPENSE_STATUS_OPTIONS = [
+  { value: "all", label: "Todos os status" },
+  { value: "paid", label: "Somente pagas" },
+  { value: "partial", label: "Somente parciais" },
+  { value: "pending", label: "Somente pendentes" },
+  { value: "overdue", label: "Somente vencidas" },
+];
+
+export default async function ExpensesPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{
+    status?: string | string[];
+    term?: string | string[];
+    startDate?: string | string[];
+    endDate?: string | string[];
+  }>;
+}) {
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
+  const filters = parseExpenseFilters(resolvedSearchParams);
+  const { expenses, overview } = await getExpenseData(filters);
 
   return (
     <div className="min-w-0 space-y-6">
@@ -34,6 +53,14 @@ export default async function ExpensesPage() {
             Adicionar despesa
           </Link>
         }
+      />
+      <RecordsFilter
+        title="Filtro completo de despesas"
+        description="Refine a visualização por status, intervalo de datas e busca por termo para localizar rapidamente qualquer conta."
+        searchPlaceholder="Descrição, categoria, pagamento ou observação"
+        statusLabel="Status"
+        statusOptions={EXPENSE_STATUS_OPTIONS}
+        filters={filters}
       />
       <ExpenseOverview overview={overview} />
 

@@ -4,7 +4,14 @@ import { mapExpenseRow } from "@/lib/services/moneycontrol-mappers";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { MC_TABLES } from "@/lib/supabase/tables";
 import type { Expense } from "@/types/finance";
-import { parseDateOnly } from "@/utils/date";
+import { compareDateOnly, parseDateOnly } from "@/utils/date";
+
+export interface ExpenseFilters {
+  status: "all" | "paid" | "pending" | "partial" | "overdue";
+  term: string;
+  startDate?: string;
+  endDate?: string;
+}
 
 export async function listExpenses(): Promise<Expense[]> {
   const supabase = await createSupabaseServerClient();
@@ -27,6 +34,39 @@ export async function listExpenses(): Promise<Expense[]> {
   }
 
   return data.map(mapExpenseRow);
+}
+
+export function parseExpenseFilters(searchParams?: {
+  status?: string | string[];
+  term?: string | string[];
+  startDate?: string | string[];
+  endDate?: string | string[];
+}): ExpenseFilters {
+  const rawStatus = getFirstParam(searchParams?.status);
+  const rawTerm = getFirstParam(searchParams?.term);
+  const rawStartDate = getFirstParam(searchParams?.startDate);
+  const rawEndDate = getFirstParam(searchParams?.endDate);
+
+  return normalizeExpenseFilters({
+    status: isExpenseFilterStatus(rawStatus) ? rawStatus : "all",
+    term: rawTerm?.trim() ?? "",
+    startDate: isDateInput(rawStartDate) ? rawStartDate : undefined,
+    endDate: isDateInput(rawEndDate) ? rawEndDate : undefined,
+  });
+}
+
+export async function getExpenseData(
+  inputFilters: ExpenseFilters = { status: "all", term: "" },
+) {
+  const filters = normalizeExpenseFilters(inputFilters);
+  const expenses = await listExpenses();
+  const filteredExpenses = expenses.filter((expense) => matchesExpenseFilters(expense, filters));
+
+  return {
+    expenses: filteredExpenses,
+    overview: getExpenseOverview(filteredExpenses),
+    filters,
+  };
 }
 
 export async function getExpenseById(id: string): Promise<Expense | null> {
@@ -121,4 +161,72 @@ export async function hasExpenseTableConnection(): Promise<boolean> {
     .limit(1);
 
   return !error;
+}
+
+function matchesExpenseFilters(expense: Expense, filters: ExpenseFilters) {
+  if (filters.status !== "all" && expense.status !== filters.status) {
+    return false;
+  }
+
+  if (filters.startDate && compareDateOnly(expense.dueDate, filters.startDate) < 0) {
+    return false;
+  }
+
+  if (filters.endDate && compareDateOnly(expense.dueDate, filters.endDate) > 0) {
+    return false;
+  }
+
+  if (!filters.term) {
+    return true;
+  }
+
+  const haystack = [
+    expense.title,
+    expense.category,
+    expense.paymentMethod,
+    expense.notes,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLocaleLowerCase("pt-BR");
+
+  return haystack.includes(filters.term.toLocaleLowerCase("pt-BR"));
+}
+
+function normalizeExpenseFilters(filters: ExpenseFilters): ExpenseFilters {
+  const startDate = isDateInput(filters.startDate) ? filters.startDate : undefined;
+  const endDate = isDateInput(filters.endDate) ? filters.endDate : undefined;
+
+  if (startDate && endDate && compareDateOnly(startDate, endDate) > 0) {
+    return {
+      ...filters,
+      startDate: endDate,
+      endDate: startDate,
+    };
+  }
+
+  return {
+    status: filters.status,
+    term: filters.term.trim(),
+    startDate,
+    endDate,
+  };
+}
+
+function getFirstParam(value?: string | string[]) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+function isExpenseFilterStatus(value: string | undefined): value is ExpenseFilters["status"] {
+  return (
+    value === "all" ||
+    value === "paid" ||
+    value === "pending" ||
+    value === "partial" ||
+    value === "overdue"
+  );
+}
+
+function isDateInput(value: string | undefined): value is string {
+  return Boolean(value && /^\d{4}-\d{2}-\d{2}$/.test(value));
 }
