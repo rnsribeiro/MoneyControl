@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -20,6 +21,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.moneycontrol.mobile.core.theme.MoneyBlue
 import com.moneycontrol.mobile.core.theme.MoneyGreen
@@ -27,6 +29,7 @@ import com.moneycontrol.mobile.core.theme.MoneyOrange
 import com.moneycontrol.mobile.core.theme.MoneyRose
 import com.moneycontrol.mobile.core.theme.MoneyTeal
 import com.moneycontrol.mobile.core.theme.TextMuted
+import com.moneycontrol.mobile.data.model.DashboardSummary
 import com.moneycontrol.mobile.data.model.ExpenseRecord
 import com.moneycontrol.mobile.data.model.IncomeRecord
 import com.moneycontrol.mobile.data.model.InvestmentRecord
@@ -43,7 +46,7 @@ data class TrendPoint(
     val investment: Double,
 )
 
-data class CategoryTotal(
+data class DonutSlice(
     val label: String,
     val total: Double,
     val color: Color,
@@ -60,12 +63,12 @@ fun TrendChartCard(points: List<TrendPoint>) {
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text(
-                text = "Tendencia financeira",
+                text = "Tendência financeira",
                 style = MaterialTheme.typography.titleMedium,
             )
             if (points.isEmpty()) {
                 Text(
-                    text = "Sem dados suficientes para montar a tendencia.",
+                    text = "Sem dados suficientes para montar a tendência.",
                     color = TextMuted,
                     style = MaterialTheme.typography.bodyMedium,
                 )
@@ -122,7 +125,13 @@ fun TrendChartCard(points: List<TrendPoint>) {
 }
 
 @Composable
-fun CategoryShareCard(items: List<CategoryTotal>) {
+fun DonutBreakdownCard(
+    title: String,
+    description: String,
+    emptyMessage: String,
+    percentageLabel: String,
+    items: List<DonutSlice>,
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
@@ -132,130 +141,104 @@ fun CategoryShareCard(items: List<CategoryTotal>) {
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text(
-                text = "Despesas por categoria",
+                text = title,
                 style = MaterialTheme.typography.titleMedium,
+            )
+            Text(
+                text = description,
+                color = TextMuted,
+                style = MaterialTheme.typography.bodyMedium,
             )
             if (items.isEmpty()) {
                 Text(
-                    text = "Sem despesas para visualizar por categoria.",
+                    text = emptyMessage,
                     color = TextMuted,
                     style = MaterialTheme.typography.bodyMedium,
                 )
             } else {
                 val total = items.sumOf { it.total }.coerceAtLeast(1.0)
-                val trackColor = MaterialTheme.colorScheme.surfaceVariant
-                items.take(5).forEach { item ->
-                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(220.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Canvas(modifier = Modifier.fillMaxSize()) {
+                        val stroke = 28.dp.toPx()
+                        val diameter = size.minDimension - stroke
+                        val topLeft = Offset(
+                            x = (size.width - diameter) / 2,
+                            y = (size.height - diameter) / 2,
+                        )
+
+                        var startAngle = -90f
+                        items.forEach { item ->
+                            val sweep = ((item.total / total) * 360f).toFloat()
+                            drawArc(
+                                color = item.color,
+                                startAngle = startAngle,
+                                sweepAngle = sweep,
+                                useCenter = false,
+                                topLeft = topLeft,
+                                size = Size(diameter, diameter),
+                                style = androidx.compose.ui.graphics.drawscope.Stroke(
+                                    width = stroke,
+                                    cap = StrokeCap.Butt,
+                                ),
+                            )
+                            startAngle += sweep
+                        }
+                    }
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "Total",
+                            color = TextMuted,
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                        CurrencyText(
+                            amount = items.sumOf { it.total },
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
+                }
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    items.forEach { item ->
+                        val percentage = if (total > 0) ((item.total / total) * 100).toInt() else 0
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            Text(item.label, style = MaterialTheme.typography.bodyMedium)
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            ) {
+                                Canvas(modifier = Modifier.height(12.dp).fillMaxWidth(0.04f)) {
+                                    drawCircle(color = item.color, radius = size.minDimension / 2)
+                                }
+                                Column {
+                                    Text(
+                                        text = item.label,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.SemiBold,
+                                    )
+                                    Text(
+                                        text = "$percentage% do total de $percentageLabel",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = TextMuted,
+                                    )
+                                }
+                            }
                             CurrencyText(
                                 amount = item.total,
-                                style = MaterialTheme.typography.bodySmall,
-                                fontWeight = androidx.compose.ui.text.font.FontWeight.Medium,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold,
                             )
-                        }
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(10.dp),
-                        ) {
-                            Canvas(modifier = Modifier.matchParentSize()) {
-                                drawRoundRect(
-                                    color = trackColor,
-                                    size = size,
-                                    cornerRadius = CornerRadius(100f, 100f),
-                                )
-                                drawRoundRect(
-                                    color = item.color,
-                                    size = Size(
-                                        width = size.width * (item.total / total).toFloat(),
-                                        height = size.height,
-                                    ),
-                                    cornerRadius = CornerRadius(100f, 100f),
-                                )
-                            }
                         }
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun CashFlowGaugeCard(
-    received: Double,
-    paid: Double,
-    invested: Double,
-) {
-    val total = (received + paid + invested).coerceAtLeast(1.0)
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Text(
-                text = "Composicao do fluxo",
-                style = MaterialTheme.typography.titleMedium,
-            )
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(180.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                Canvas(modifier = Modifier.matchParentSize()) {
-                    val stroke = 22.dp.toPx()
-                    val diameter = size.minDimension - stroke
-                    val topLeft = Offset((size.width - diameter) / 2, (size.height - diameter) / 2)
-                    val sweepIncome = (received / total * 360f).toFloat()
-                    val sweepPaid = (paid / total * 360f).toFloat()
-                    val sweepInvested = 360f - sweepIncome - sweepPaid
-
-                    drawArc(
-                        color = MoneyGreen,
-                        startAngle = -90f,
-                        sweepAngle = sweepIncome,
-                        useCenter = false,
-                        topLeft = topLeft,
-                        size = Size(diameter, diameter),
-                        style = androidx.compose.ui.graphics.drawscope.Stroke(stroke, cap = StrokeCap.Round),
-                    )
-                    drawArc(
-                        color = MoneyOrange,
-                        startAngle = -90f + sweepIncome,
-                        sweepAngle = sweepPaid,
-                        useCenter = false,
-                        topLeft = topLeft,
-                        size = Size(diameter, diameter),
-                        style = androidx.compose.ui.graphics.drawscope.Stroke(stroke, cap = StrokeCap.Round),
-                    )
-                    drawArc(
-                        color = MoneyBlue,
-                        startAngle = -90f + sweepIncome + sweepPaid,
-                        sweepAngle = sweepInvested,
-                        useCenter = false,
-                        topLeft = topLeft,
-                        size = Size(diameter, diameter),
-                        style = androidx.compose.ui.graphics.drawscope.Stroke(stroke, cap = StrokeCap.Round),
-                    )
-                }
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Fluxo", color = TextMuted, style = MaterialTheme.typography.bodySmall)
-                    CurrencyText(
-                        amount = received,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                    )
-                }
-            }
-            LegendRow()
         }
     }
 }
@@ -266,9 +249,9 @@ private fun LegendRow() {
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        LegendChip("Recebido", MoneyGreen)
+        LegendChip("Receitas", MoneyGreen)
         LegendChip("Despesas", MoneyRose)
-        LegendChip("Investido", MoneyBlue)
+        LegendChip("Investimentos", MoneyBlue)
     }
 }
 
@@ -303,7 +286,7 @@ fun buildTrendPoints(
     }
 
     val allDates = buildList {
-        incomes.mapNotNullTo(this) { parseDate(it.expectedDate) }
+        incomes.mapNotNullTo(this) { parseDate(incomeChartDate(it)) }
         expenses.mapNotNullTo(this) { parseDate(it.dueDate) }
         investments.mapNotNullTo(this) { parseDate(it.investmentDate) }
     }.sorted()
@@ -326,7 +309,7 @@ fun buildTrendPoints(
     }
 
     incomes.forEach { income ->
-        val parsed = parseDate(income.expectedDate)?.withDayOfMonth(1) ?: return@forEach
+        val parsed = parseDate(incomeChartDate(income))?.withDayOfMonth(1) ?: return@forEach
         val key = parsed.toString()
         val point = monthMap[key] ?: return@forEach
         monthMap[key] = point.copy(income = point.income + income.amount)
@@ -347,18 +330,48 @@ fun buildTrendPoints(
     return monthMap.values.toList()
 }
 
-fun buildExpenseCategoryTotals(expenses: List<ExpenseRecord>): List<CategoryTotal> {
+fun buildExpenseCategoryTotals(expenses: List<ExpenseRecord>): List<DonutSlice> {
     val colorPalette = listOf(MoneyRose, MoneyOrange, MoneyBlue, MoneyGreen, MoneyTeal)
     val grouped = expenses.groupBy { it.categoryName }
         .map { entry -> entry.key to entry.value.sumOf { it.amount } }
         .sortedByDescending { it.second }
 
     return grouped.mapIndexed { index, entry ->
-        CategoryTotal(
+        DonutSlice(
             label = entry.first,
             total = entry.second,
             color = colorPalette[index % colorPalette.size],
         )
+    }
+}
+
+fun buildIncomeSourceTotals(incomes: List<IncomeRecord>): List<DonutSlice> {
+    val colorPalette = listOf(MoneyGreen, MoneyTeal, MoneyBlue, MoneyOrange, MoneyRose)
+    val grouped = incomes.groupBy { it.source }
+        .map { entry -> entry.key to entry.value.sumOf { it.amount } }
+        .sortedByDescending { it.second }
+
+    return grouped.mapIndexed { index, entry ->
+        DonutSlice(
+            label = entry.first,
+            total = entry.second,
+            color = colorPalette[index % colorPalette.size],
+        )
+    }
+}
+
+fun buildIncomeVsExpenseTotals(summary: DashboardSummary): List<DonutSlice> {
+    return listOf(
+        DonutSlice("Receitas", summary.totalIncome, MoneyGreen),
+        DonutSlice("Despesas", summary.totalExpenses, MoneyRose),
+    ).filter { it.total > 0 }
+}
+
+private fun incomeChartDate(income: IncomeRecord): String {
+    return if (income.status == "received") {
+        income.actualReceivedAt ?: income.receivedAt
+    } else {
+        income.expectedDate
     }
 }
 

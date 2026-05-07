@@ -1,6 +1,7 @@
 ﻿package com.moneycontrol.mobile.ui.home
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -24,6 +25,8 @@ import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -55,6 +58,7 @@ import com.moneycontrol.mobile.data.model.FinancePeriodFilter
 import com.moneycontrol.mobile.data.model.FinanceSnapshot
 import com.moneycontrol.mobile.data.model.IncomeRecord
 import com.moneycontrol.mobile.data.model.InvestmentRecord
+import com.moneycontrol.mobile.data.model.MonthOption
 import com.moneycontrol.mobile.data.model.RecentActivity
 import com.moneycontrol.mobile.ui.shared.CurrencyText
 
@@ -143,14 +147,20 @@ fun HomeScreen(
                     summary = filteredSnapshot.summary,
                     recentActivities = filteredSnapshot.recentActivities,
                     selectedFilter = state.selectedFilter,
+                    selectedMonthKey = state.selectedMonthKey,
+                    availableMonthOptions = state.availableMonthOptions,
                     onFilterSelected = viewModel::setFilter,
+                    onMonthSelected = viewModel::setSelectedMonth,
                     padding = padding,
                 )
                 HomeTab.Expenses -> ExpensesTab(
                     expenses = filteredSnapshot.expenses,
                     categories = expenseCategories,
                     selectedFilter = state.selectedFilter,
+                    selectedMonthKey = state.selectedMonthKey,
+                    availableMonthOptions = state.availableMonthOptions,
                     onFilterSelected = viewModel::setFilter,
+                    onMonthSelected = viewModel::setSelectedMonth,
                     padding = padding,
                     onCreate = {
                         activeEditor = HomeEditor.Expense(categories = expenseCategories)
@@ -168,7 +178,10 @@ fun HomeScreen(
                     incomes = filteredSnapshot.incomes,
                     categories = incomeCategories,
                     selectedFilter = state.selectedFilter,
+                    selectedMonthKey = state.selectedMonthKey,
+                    availableMonthOptions = state.availableMonthOptions,
                     onFilterSelected = viewModel::setFilter,
+                    onMonthSelected = viewModel::setSelectedMonth,
                     padding = padding,
                     onCreate = {
                         activeEditor = HomeEditor.Income(categories = incomeCategories)
@@ -182,7 +195,10 @@ fun HomeScreen(
                     investments = filteredSnapshot.investments,
                     categories = investmentCategories,
                     selectedFilter = state.selectedFilter,
+                    selectedMonthKey = state.selectedMonthKey,
+                    availableMonthOptions = state.availableMonthOptions,
                     onFilterSelected = viewModel::setFilter,
+                    onMonthSelected = viewModel::setSelectedMonth,
                     padding = padding,
                     onCreate = {
                         activeEditor = HomeEditor.Investment(categories = investmentCategories)
@@ -286,11 +302,16 @@ private fun DashboardTab(
     summary: DashboardSummary,
     recentActivities: List<RecentActivity>,
     selectedFilter: FinancePeriodFilter,
+    selectedMonthKey: String,
+    availableMonthOptions: List<MonthOption>,
     onFilterSelected: (FinancePeriodFilter) -> Unit,
+    onMonthSelected: (String) -> Unit,
     padding: PaddingValues,
 ) {
     val trendPoints = buildTrendPoints(snapshot.incomes, snapshot.expenses, snapshot.investments)
     val categoryTotals = buildExpenseCategoryTotals(snapshot.expenses)
+    val incomeTotals = buildIncomeSourceTotals(snapshot.incomes)
+    val incomeVsExpenseTotals = buildIncomeVsExpenseTotals(summary)
 
     LazyColumn(
         modifier = Modifier
@@ -304,18 +325,14 @@ private fun DashboardTab(
                 title = "Dashboard",
                 description = "Resumo do seu caixa e das movimentações recentes.",
                 selectedFilter = selectedFilter,
+                selectedMonthKey = selectedMonthKey,
+                availableMonthOptions = availableMonthOptions,
                 onFilterSelected = onFilterSelected,
+                onMonthSelected = onMonthSelected,
             )
         }
         item {
             SummaryCard("Em caixa", summary.cashOnHand)
-        }
-        item {
-            CashFlowGaugeCard(
-                received = summary.receivedIncome,
-                paid = summary.paidExpenses,
-                invested = summary.totalInvested,
-            )
         }
         item {
             Row(
@@ -351,7 +368,31 @@ private fun DashboardTab(
             TrendChartCard(trendPoints)
         }
         item {
-            CategoryShareCard(categoryTotals)
+            DonutBreakdownCard(
+                title = "Receitas x despesas",
+                description = "Compare o volume total de entradas e saídas no período selecionado.",
+                emptyMessage = "Sem dados suficientes para o gráfico.",
+                percentageLabel = "movimentações",
+                items = incomeVsExpenseTotals,
+            )
+        }
+        item {
+            DonutBreakdownCard(
+                title = "Despesas por categoria",
+                description = "Entenda rapidamente onde seu dinheiro está concentrado.",
+                emptyMessage = "Sem despesas para visualizar por categoria.",
+                percentageLabel = "despesas",
+                items = categoryTotals,
+            )
+        }
+        item {
+            DonutBreakdownCard(
+                title = "Receitas por origem",
+                description = "Veja com clareza quais fontes estão trazendo mais dinheiro para o seu caixa.",
+                emptyMessage = "Sem receitas para visualizar por origem.",
+                percentageLabel = "receitas",
+                items = incomeTotals,
+            )
         }
         item {
             Text(
@@ -377,7 +418,10 @@ private fun ExpensesTab(
     expenses: List<ExpenseRecord>,
     categories: List<CategoryRecord>,
     selectedFilter: FinancePeriodFilter,
+    selectedMonthKey: String,
+    availableMonthOptions: List<MonthOption>,
     onFilterSelected: (FinancePeriodFilter) -> Unit,
+    onMonthSelected: (String) -> Unit,
     padding: PaddingValues,
     onCreate: () -> Unit,
     onEdit: (ExpenseRecord) -> Unit,
@@ -400,7 +444,10 @@ private fun ExpensesTab(
                 title = "Despesas",
                 description = "Controle vencimentos, pagamentos e status das contas.",
                 selectedFilter = selectedFilter,
+                selectedMonthKey = selectedMonthKey,
+                availableMonthOptions = availableMonthOptions,
                 onFilterSelected = onFilterSelected,
+                onMonthSelected = onMonthSelected,
                 buttonLabel = "Nova despesa",
                 onButtonClick = onCreate,
             )
@@ -439,7 +486,10 @@ private fun IncomesTab(
     incomes: List<IncomeRecord>,
     categories: List<CategoryRecord>,
     selectedFilter: FinancePeriodFilter,
+    selectedMonthKey: String,
+    availableMonthOptions: List<MonthOption>,
     onFilterSelected: (FinancePeriodFilter) -> Unit,
+    onMonthSelected: (String) -> Unit,
     padding: PaddingValues,
     onCreate: () -> Unit,
     onEdit: (IncomeRecord) -> Unit,
@@ -447,6 +497,7 @@ private fun IncomesTab(
 ) {
     val receivedAmount = incomes.filter { it.status == "received" }.sumOf { it.amount }
     val expectedAmount = incomes.filter { it.status == "expected" }.sumOf { it.amount }
+    val incomeTotals = buildIncomeSourceTotals(incomes)
 
     LazyColumn(
         modifier = Modifier
@@ -460,7 +511,10 @@ private fun IncomesTab(
                 title = "Receitas",
                 description = "Registre valores recebidos e valores previstos.",
                 selectedFilter = selectedFilter,
+                selectedMonthKey = selectedMonthKey,
+                availableMonthOptions = availableMonthOptions,
                 onFilterSelected = onFilterSelected,
+                onMonthSelected = onMonthSelected,
                 buttonLabel = "Nova receita",
                 onButtonClick = onCreate,
             )
@@ -472,6 +526,17 @@ private fun IncomesTab(
             ) {
                 CompactSummaryCard("Recebido", receivedAmount, Modifier.weight(1f))
                 CompactSummaryCard("A receber", expectedAmount, Modifier.weight(1f))
+            }
+        }
+        if (incomeTotals.isNotEmpty()) {
+            item {
+                DonutBreakdownCard(
+                    title = "Receitas por origem",
+                    description = "Acompanhe quais fontes geram mais entradas no período selecionado.",
+                    emptyMessage = "Sem receitas para visualizar por origem.",
+                    percentageLabel = "receitas",
+                    items = incomeTotals,
+                )
             }
         }
         if (categories.isEmpty()) {
@@ -496,7 +561,10 @@ private fun InvestmentsTab(
     investments: List<InvestmentRecord>,
     categories: List<CategoryRecord>,
     selectedFilter: FinancePeriodFilter,
+    selectedMonthKey: String,
+    availableMonthOptions: List<MonthOption>,
     onFilterSelected: (FinancePeriodFilter) -> Unit,
+    onMonthSelected: (String) -> Unit,
     padding: PaddingValues,
     onCreate: () -> Unit,
     onEdit: (InvestmentRecord) -> Unit,
@@ -516,7 +584,10 @@ private fun InvestmentsTab(
                 title = "Investimentos",
                 description = "Acompanhe aportes, corretoras e objetivos.",
                 selectedFilter = selectedFilter,
+                selectedMonthKey = selectedMonthKey,
+                availableMonthOptions = availableMonthOptions,
                 onFilterSelected = onFilterSelected,
+                onMonthSelected = onMonthSelected,
                 buttonLabel = "Novo investimento",
                 onButtonClick = onCreate,
             )
@@ -581,10 +652,19 @@ private fun FilterHeader(
     title: String,
     description: String,
     selectedFilter: FinancePeriodFilter,
+    selectedMonthKey: String,
+    availableMonthOptions: List<MonthOption>,
     onFilterSelected: (FinancePeriodFilter) -> Unit,
+    onMonthSelected: (String) -> Unit,
     buttonLabel: String? = null,
     onButtonClick: (() -> Unit)? = null,
 ) {
+    var monthMenuExpanded by remember { mutableStateOf(false) }
+    val selectedMonthLabel = availableMonthOptions
+        .firstOrNull { it.key == selectedMonthKey }
+        ?.label
+        ?: selectedMonthKey
+
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -599,6 +679,27 @@ private fun FilterHeader(
                         onClick = { onFilterSelected(filter) },
                         label = { Text(filter.label) },
                     )
+                }
+            }
+            if (selectedFilter == FinancePeriodFilter.SPECIFIC_MONTH && availableMonthOptions.isNotEmpty()) {
+                Box {
+                    Button(onClick = { monthMenuExpanded = true }) {
+                        Text(selectedMonthLabel)
+                    }
+                    DropdownMenu(
+                        expanded = monthMenuExpanded,
+                        onDismissRequest = { monthMenuExpanded = false },
+                    ) {
+                        availableMonthOptions.forEach { option ->
+                            DropdownMenuItem(
+                                text = { Text(option.label) },
+                                onClick = {
+                                    onMonthSelected(option.key)
+                                    monthMenuExpanded = false
+                                },
+                            )
+                        }
+                    }
                 }
             }
             if (buttonLabel != null && onButtonClick != null) {

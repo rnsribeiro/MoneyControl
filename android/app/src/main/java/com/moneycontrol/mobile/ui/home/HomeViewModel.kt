@@ -1,4 +1,4 @@
-﻿package com.moneycontrol.mobile.ui.home
+package com.moneycontrol.mobile.ui.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -13,7 +13,7 @@ import com.moneycontrol.mobile.data.model.IncomeMutation
 import com.moneycontrol.mobile.data.model.IncomeRecord
 import com.moneycontrol.mobile.data.model.InvestmentMutation
 import com.moneycontrol.mobile.data.model.InvestmentRecord
-import com.moneycontrol.mobile.data.model.RecentActivity
+import com.moneycontrol.mobile.data.model.MonthOption
 import com.moneycontrol.mobile.data.repository.AuthRepository
 import com.moneycontrol.mobile.data.repository.FinanceRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,17 +22,23 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.time.format.TextStyle
+import java.util.Locale
 
 data class HomeUiState(
     val loading: Boolean = true,
     val submitting: Boolean = false,
     val snapshot: FinanceSnapshot = FinanceSnapshot(),
-    val selectedFilter: FinancePeriodFilter = FinancePeriodFilter.CURRENT_MONTH,
+    val selectedFilter: FinancePeriodFilter = FinancePeriodFilter.ALL_TIME,
+    val selectedMonthKey: String = currentMonthKey(),
     val loadError: String? = null,
     val feedbackMessage: String? = null,
 ) {
+    val availableMonthOptions: List<MonthOption>
+        get() = snapshot.availableMonthOptions()
+
     val filteredSnapshot: FinanceSnapshot
-        get() = snapshot.filterBy(selectedFilter)
+        get() = snapshot.filterBy(selectedFilter, selectedMonthKey)
 }
 
 class HomeViewModel(
@@ -68,16 +74,35 @@ class HomeViewModel(
     }
 
     fun setFilter(filter: FinancePeriodFilter) {
-        _uiState.update { it.copy(selectedFilter = filter) }
+        _uiState.update { state ->
+            state.copy(
+                selectedFilter = filter,
+                selectedMonthKey = if (filter == FinancePeriodFilter.SPECIFIC_MONTH) {
+                    state.availableMonthOptions.firstOrNull()?.key ?: state.selectedMonthKey
+                } else {
+                    state.selectedMonthKey
+                },
+            )
+        }
+    }
+
+    fun setSelectedMonth(monthKey: String) {
+        _uiState.update {
+            it.copy(
+                selectedFilter = FinancePeriodFilter.SPECIFIC_MONTH,
+                selectedMonthKey = monthKey,
+            )
+        }
     }
 
     fun createCategory(input: CategoryMutation) = performMutation("Categoria salva com sucesso.") {
         financeRepository.createCategory(input)
     }
 
-    fun updateCategory(id: String, input: CategoryMutation) = performMutation("Categoria atualizada com sucesso.") {
-        financeRepository.updateCategory(id, input)
-    }
+    fun updateCategory(id: String, input: CategoryMutation) =
+        performMutation("Categoria atualizada com sucesso.") {
+            financeRepository.updateCategory(id, input)
+        }
 
     fun deleteCategory(id: String) = performMutation("Categoria excluída com sucesso.") {
         financeRepository.deleteCategory(id)
@@ -87,9 +112,10 @@ class HomeViewModel(
         financeRepository.createExpense(input)
     }
 
-    fun updateExpense(id: String, input: ExpenseMutation) = performMutation("Despesa atualizada com sucesso.") {
-        financeRepository.updateExpense(id, input)
-    }
+    fun updateExpense(id: String, input: ExpenseMutation) =
+        performMutation("Despesa atualizada com sucesso.") {
+            financeRepository.updateExpense(id, input)
+        }
 
     fun toggleExpenseStatus(id: String, status: String) = performMutation(
         if (status == "paid") "Despesa marcada como paga." else "Despesa marcada como pendente.",
@@ -105,21 +131,24 @@ class HomeViewModel(
         financeRepository.createIncome(input)
     }
 
-    fun updateIncome(id: String, input: IncomeMutation) = performMutation("Receita atualizada com sucesso.") {
-        financeRepository.updateIncome(id, input)
-    }
+    fun updateIncome(id: String, input: IncomeMutation) =
+        performMutation("Receita atualizada com sucesso.") {
+            financeRepository.updateIncome(id, input)
+        }
 
     fun deleteIncome(id: String) = performMutation("Receita excluída com sucesso.") {
         financeRepository.deleteIncome(id)
     }
 
-    fun createInvestment(input: InvestmentMutation) = performMutation("Investimento salvo com sucesso.") {
-        financeRepository.createInvestment(input)
-    }
+    fun createInvestment(input: InvestmentMutation) =
+        performMutation("Investimento salvo com sucesso.") {
+            financeRepository.createInvestment(input)
+        }
 
-    fun updateInvestment(id: String, input: InvestmentMutation) = performMutation("Investimento atualizado com sucesso.") {
-        financeRepository.updateInvestment(id, input)
-    }
+    fun updateInvestment(id: String, input: InvestmentMutation) =
+        performMutation("Investimento atualizado com sucesso.") {
+            financeRepository.updateInvestment(id, input)
+        }
 
     fun deleteInvestment(id: String) = performMutation("Investimento excluído com sucesso.") {
         financeRepository.deleteInvestment(id)
@@ -163,22 +192,25 @@ class HomeViewModel(
     }
 }
 
-private fun FinanceSnapshot.filterBy(filter: FinancePeriodFilter): FinanceSnapshot {
+private fun FinanceSnapshot.filterBy(
+    filter: FinancePeriodFilter,
+    selectedMonthKey: String,
+): FinanceSnapshot {
     if (filter == FinancePeriodFilter.ALL_TIME) {
         return copy(summary = buildSummary(expenses, incomes, investments))
     }
 
     val filteredExpenses = expenses.filter { expense ->
-        expenseDateMatches(expense.dueDate, filter)
+        dateMatches(expense.dueDate, filter, selectedMonthKey)
     }
     val filteredIncomes = incomes.filter { income ->
-        incomeDateMatches(income.expectedDate, filter)
+        dateMatches(incomeFilterDate(income), filter, selectedMonthKey)
     }
     val filteredInvestments = investments.filter { investment ->
-        investmentDateMatches(investment.investmentDate, filter)
+        dateMatches(investment.investmentDate, filter, selectedMonthKey)
     }
     val filteredActivities = recentActivities.filter { activity ->
-        dateMatches(activity.date, filter)
+        dateMatches(activity.date, filter, selectedMonthKey)
     }
 
     return FinanceSnapshot(
@@ -189,6 +221,29 @@ private fun FinanceSnapshot.filterBy(filter: FinancePeriodFilter): FinanceSnapsh
         categories = categories,
         recentActivities = filteredActivities.take(6),
     )
+}
+
+private fun FinanceSnapshot.availableMonthOptions(): List<MonthOption> {
+    val locale = Locale.forLanguageTag("pt-BR")
+    val monthKeys = buildSet {
+        expenses.mapTo(this) { monthKey(it.dueDate) }
+        incomes.mapTo(this) { monthKey(incomeFilterDate(it)) }
+        investments.mapTo(this) { monthKey(it.investmentDate) }
+    }
+        .filter { it.isNotBlank() }
+        .sortedDescending()
+
+    if (monthKeys.isEmpty()) {
+        val fallback = currentMonthKey()
+        return listOf(MonthOption(fallback, formatMonthLabel(fallback, locale)))
+    }
+
+    return monthKeys.map { key ->
+        MonthOption(
+            key = key,
+            label = formatMonthLabel(key, locale),
+        )
+    }
 }
 
 private fun buildSummary(
@@ -218,23 +273,54 @@ private fun buildSummary(
     )
 }
 
-private fun expenseDateMatches(value: String, filter: FinancePeriodFilter): Boolean = dateMatches(value, filter)
-private fun incomeDateMatches(value: String, filter: FinancePeriodFilter): Boolean = dateMatches(value, filter)
-private fun investmentDateMatches(value: String, filter: FinancePeriodFilter): Boolean = dateMatches(value, filter)
+private fun incomeFilterDate(income: IncomeRecord): String {
+    return if (income.status == "received") {
+        income.actualReceivedAt ?: income.receivedAt
+    } else {
+        income.expectedDate
+    }
+}
 
-private fun dateMatches(value: String, filter: FinancePeriodFilter): Boolean {
+private fun dateMatches(
+    value: String,
+    filter: FinancePeriodFilter,
+    selectedMonthKey: String,
+): Boolean {
     val parsedDate = runCatching { LocalDate.parse(value) }.getOrNull() ?: return false
     val now = LocalDate.now()
 
     return when (filter) {
+        FinancePeriodFilter.ALL_TIME -> true
         FinancePeriodFilter.CURRENT_MONTH -> {
             parsedDate.year == now.year && parsedDate.month == now.month
         }
         FinancePeriodFilter.CURRENT_YEAR -> {
             parsedDate.year == now.year
         }
-        FinancePeriodFilter.ALL_TIME -> true
+        FinancePeriodFilter.SPECIFIC_MONTH -> {
+            monthKey(value) == selectedMonthKey
+        }
     }
+}
+
+private fun currentMonthKey(): String {
+    val now = LocalDate.now()
+    return "${now.year}-${now.monthValue.toString().padStart(2, '0')}"
+}
+
+private fun monthKey(value: String): String {
+    val parsedDate = runCatching { LocalDate.parse(value) }.getOrNull() ?: return ""
+    return "${parsedDate.year}-${parsedDate.monthValue.toString().padStart(2, '0')}"
+}
+
+private fun formatMonthLabel(value: String, locale: Locale): String {
+    val parsedDate = runCatching { LocalDate.parse("$value-01") }.getOrNull()
+        ?: return value
+
+    val month = parsedDate.month.getDisplayName(TextStyle.FULL, locale)
+        .replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }
+
+    return "$month ${parsedDate.year}"
 }
 
 class HomeViewModelFactory(
@@ -246,4 +332,3 @@ class HomeViewModelFactory(
         return HomeViewModel(financeRepository, authRepository) as T
     }
 }
-

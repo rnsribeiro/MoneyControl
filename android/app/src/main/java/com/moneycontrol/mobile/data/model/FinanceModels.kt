@@ -92,12 +92,18 @@ data class FinanceSnapshot(
     val recentActivities: List<RecentActivity> = emptyList(),
 )
 
+data class MonthOption(
+    val key: String,
+    val label: String,
+)
+
 enum class FinancePeriodFilter(
     val label: String,
 ) {
-    CURRENT_MONTH("Mes"),
-    CURRENT_YEAR("Ano"),
     ALL_TIME("Tudo"),
+    CURRENT_YEAR("Ano atual"),
+    CURRENT_MONTH("Mês atual"),
+    SPECIFIC_MONTH("Mês específico"),
 }
 
 @Serializable
