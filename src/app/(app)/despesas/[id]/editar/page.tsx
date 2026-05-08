@@ -29,12 +29,13 @@ export default async function EditExpensePage({
         categoryOptions={categoryOptions}
         initialValues={{
           id: expense.id,
-          title: expense.title,
-          amount: expense.amount,
-          paidAmount: expense.paidAmount,
-          category: expense.category,
-          dueDate: expense.dueDate,
-          paymentMethod: expense.paymentMethod,
+        title: expense.title,
+        amount: expense.amount,
+        paidAmount: expense.paidAmount,
+        category: expense.category,
+        date: expense.date,
+        dueDate: expense.dueDate,
+        paymentMethod: expense.paymentMethod,
           status:
             expense.status === "paid"
               ? "paid"

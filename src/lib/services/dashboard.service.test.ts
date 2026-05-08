@@ -13,11 +13,11 @@ describe("dashboard.service", () => {
     expect(summary.receivedIncome).toBe(7400);
     expect(summary.expectedIncome).toBe(1200);
     expect(summary.totalExpenses).toBe(3710);
-    expect(summary.paidExpenses).toBe(3050);
-    expect(summary.pendingExpenses).toBe(660);
+    expect(summary.paidExpenses).toBe(3230);
+    expect(summary.pendingExpenses).toBe(480);
     expect(summary.totalInvested).toBe(1850);
     expect(summary.balance).toBe(3040);
-    expect(summary.cashOnHand).toBe(2500);
+    expect(summary.cashOnHand).toBe(2320);
     expect(summary.savingsRate).toBe(25);
   });
 

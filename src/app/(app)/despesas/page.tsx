@@ -100,7 +100,9 @@ export default async function ExpensesPage({
                     </TableCell>
                     <TableCell className="capitalize">{expense.category}</TableCell>
                     <TableCell className="capitalize">{expense.paymentMethod}</TableCell>
-                    <TableCell>{formatDate(expense.dueDate)}</TableCell>
+                    <TableCell>
+                      {expense.dueDate ? formatDate(expense.dueDate) : "Sem vencimento"}
+                    </TableCell>
                     <TableCell>
                       <ExpenseStatusBadge status={expense.status} />
                     </TableCell>

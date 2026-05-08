@@ -256,7 +256,7 @@ private fun FinanceSnapshot.filterBy(
     }
 
     val filteredExpenses = expenses.filter { expense ->
-        dateMatches(expense.dueDate, filter, selectedMonthKey)
+        dateMatches(expense.dueDate ?: expense.expenseDate, filter, selectedMonthKey)
     }
     val filteredIncomes = incomes.filter { income ->
         dateMatches(incomeFilterDate(income), filter, selectedMonthKey)
@@ -282,7 +282,7 @@ private fun FinanceSnapshot.filterBy(
 private fun FinanceSnapshot.availableMonthOptions(): List<MonthOption> {
     val locale = Locale.forLanguageTag("pt-BR")
     val monthKeys = buildSet {
-        expenses.mapTo(this) { monthKey(it.dueDate) }
+        expenses.mapTo(this) { monthKey(it.dueDate ?: it.expenseDate) }
         incomes.mapTo(this) { monthKey(incomeFilterDate(it)) }
         investments.mapTo(this) { monthKey(it.investmentDate) }
     }
@@ -326,7 +326,7 @@ private fun FinanceSnapshot.buildHistoryEntries(): List<HistoryEntry> {
                     id = it.id,
                     title = it.title,
                     amount = it.amount,
-                    date = it.dueDate,
+                    date = it.dueDate ?: it.expenseDate,
                     category = it.categoryName,
                     type = "expense",
                     status = expenseStatusLabel(it),

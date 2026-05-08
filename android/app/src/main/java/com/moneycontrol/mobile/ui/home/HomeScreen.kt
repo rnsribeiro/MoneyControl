@@ -953,7 +953,11 @@ private fun ExpenseCard(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Text(
-                "Vencimento em ${expense.dueDate}. Restam ${expense.remainingAmount.formatMoney()}.",
+                if (expense.dueDate != null) {
+                    "Vencimento em ${expense.dueDate}. Restam ${expense.remainingAmount.formatMoney()}."
+                } else {
+                    "Despesa sem vencimento. Restam ${expense.remainingAmount.formatMoney()}."
+                },
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -1187,7 +1191,7 @@ private fun isOverdue(expense: ExpenseRecord): Boolean {
     if (expense.remainingAmount <= 0) {
         return false
     }
-    val dueDate = runCatching { LocalDate.parse(expense.dueDate) }.getOrNull() ?: return false
+    val dueDate = expense.dueDate?.let { runCatching { LocalDate.parse(it) }.getOrNull() } ?: return false
     return dueDate.isBefore(LocalDate.now())
 }
 

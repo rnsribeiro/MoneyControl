@@ -28,7 +28,7 @@ class FinanceRepository {
 
     suspend fun loadSnapshot(): FinanceSnapshot {
         val expenses = supabase.from("mc_expenses").select().decodeList<ExpenseRecord>()
-            .sortedByDescending { it.dueDate }
+            .sortedByDescending { it.dueDate ?: it.expenseDate }
         val incomes = supabase.from("mc_incomes").select().decodeList<IncomeRecord>()
             .sortedByDescending { incomeDate(it) }
         val investments = supabase.from("mc_investments").select().decodeList<InvestmentRecord>()
@@ -88,7 +88,7 @@ class FinanceRepository {
             status = resolveExpenseStatus(input.amount, input.paidAmount, input.status),
             expenseDate = input.expenseDate,
             dueDate = input.dueDate,
-            paidAt = normalizePaidAt(input.dueDate, input.paidAmount, input.status, input.paidAt),
+            paidAt = normalizePaidAt(input.expenseDate, input.dueDate, input.paidAmount, input.status, input.paidAt),
             notes = input.notes,
         )
         supabase.from("mc_expenses").insert(payload)
@@ -99,7 +99,7 @@ class FinanceRepository {
         val payload = input.copy(
             paidAmount = normalizedPaidAmount,
             status = resolveExpenseStatus(input.amount, normalizedPaidAmount, input.status),
-            paidAt = normalizePaidAt(input.dueDate, normalizedPaidAmount, input.status, input.paidAt),
+            paidAt = normalizePaidAt(input.expenseDate, input.dueDate, normalizedPaidAmount, input.status, input.paidAt),
         )
         supabase.from("mc_expenses").update(payload) {
             filter { eq("id", id) }
@@ -369,13 +369,14 @@ class FinanceRepository {
     }
 
     private fun normalizePaidAt(
-        dueDate: String,
+        expenseDate: String,
+        dueDate: String?,
         paidAmount: Double,
         status: String,
         paidAt: String?,
     ): String? {
         return if (status == "paid" || paidAmount > 0) {
-            paidAt ?: dueDate
+            paidAt ?: dueDate ?: expenseDate
         } else {
             null
         }
@@ -386,7 +387,7 @@ class FinanceRepository {
             return false
         }
 
-        val dueDate = runCatching { LocalDate.parse(expense.dueDate) }.getOrNull() ?: return false
+        val dueDate = expense.dueDate?.let { runCatching { LocalDate.parse(it) }.getOrNull() } ?: return false
         return dueDate.isBefore(LocalDate.now())
     }
 

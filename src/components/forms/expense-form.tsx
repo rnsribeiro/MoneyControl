@@ -40,7 +40,8 @@ export function ExpenseForm({
     amount: number;
     paidAmount: number;
     category: string;
-    dueDate: string;
+    date: string;
+    dueDate?: string;
     paymentMethod: string;
     status: "paid" | "pending" | "partial";
     notes?: string;
@@ -56,7 +57,8 @@ export function ExpenseForm({
       amount: initialValues?.amount ?? 0,
       paidAmount: initialValues?.paidAmount ?? 0,
       category: initialValues?.category ?? resolvedCategoryOptions[0]?.value ?? "",
-      dueDate: initialValues?.dueDate ?? getLocalDateInputValue(),
+      hasDueDate: Boolean(initialValues?.dueDate),
+      dueDate: initialValues?.dueDate ?? "",
       paymentMethod: initialValues?.paymentMethod ?? "",
       status: initialValues?.status ?? "paid",
       notes: initialValues?.notes ?? "",
@@ -65,6 +67,7 @@ export function ExpenseForm({
 
   const watchedStatus = useWatch({ control: form.control, name: "status" });
   const watchedAmount = useWatch({ control: form.control, name: "amount" });
+  const hasDueDate = useWatch({ control: form.control, name: "hasDueDate" });
 
   useEffect(() => {
     if (!Number.isFinite(watchedAmount)) {
@@ -81,6 +84,12 @@ export function ExpenseForm({
     }
   }, [form, watchedAmount, watchedStatus]);
 
+  useEffect(() => {
+    if (!hasDueDate) {
+      form.setValue("dueDate", "", { shouldValidate: true });
+    }
+  }, [form, hasDueDate]);
+
   if (!resolvedCategoryOptions.length) {
     return <CategoryRequiredState kindLabel="despesas" />;
   }
@@ -90,7 +99,7 @@ export function ExpenseForm({
     const supabase = createSupabaseBrowserClient();
 
     if (!supabase) {
-      toast.error("Supabase não configurado.");
+      toast.error("Supabase nao configurado.");
       setIsSubmitting(false);
       return;
     }
@@ -100,8 +109,8 @@ export function ExpenseForm({
     } = await supabase.auth.getUser();
 
     if (!user) {
-      toast.error("Sessão não encontrada.", {
-        description: "Faça login para salvar suas despesas.",
+      toast.error("Sessao nao encontrada.", {
+        description: "Faca login para salvar suas despesas.",
       });
       setIsSubmitting(false);
       return;
@@ -113,6 +122,9 @@ export function ExpenseForm({
         : values.status === "pending"
           ? 0
           : values.paidAmount;
+    const referenceDate = values.hasDueDate
+      ? values.dueDate || getLocalDateInputValue()
+      : initialValues?.date || getLocalDateInputValue();
 
     const payload: MoneyControlExpenseInsert = {
       user_id: user.id,
@@ -122,9 +134,9 @@ export function ExpenseForm({
       category_name: values.category,
       payment_method: values.paymentMethod,
       status: values.status,
-      expense_date: values.dueDate,
-      due_date: values.dueDate,
-      paid_at: normalizedPaidAmount > 0 ? values.dueDate : undefined,
+      expense_date: referenceDate,
+      due_date: values.hasDueDate ? values.dueDate || null : null,
+      paid_at: normalizedPaidAmount > 0 ? referenceDate : null,
       notes: values.notes,
     };
 
@@ -133,7 +145,7 @@ export function ExpenseForm({
       : await supabase.from(MC_TABLES.expenses).insert(payload);
 
     if (error) {
-      toast.error("Não foi possível salvar a despesa.", {
+      toast.error("Nao foi possivel salvar a despesa.", {
         description: error.message,
       });
       setIsSubmitting(false);
@@ -154,7 +166,8 @@ export function ExpenseForm({
       amount: initialValues?.amount ?? 0,
       paidAmount: initialValues?.paidAmount ?? 0,
       category: initialValues?.category ?? resolvedCategoryOptions[0]?.value ?? "",
-      dueDate: initialValues?.dueDate ?? getLocalDateInputValue(),
+      hasDueDate: Boolean(initialValues?.dueDate),
+      dueDate: initialValues?.dueDate ?? "",
       paymentMethod: initialValues?.paymentMethod ?? "",
       status: initialValues?.status ?? "paid",
       notes: initialValues?.notes ?? "",
@@ -174,7 +187,7 @@ export function ExpenseForm({
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <div className="grid gap-5 md:grid-cols-2">
             <Field>
-              <Label htmlFor="title">Descrição</Label>
+              <Label htmlFor="title">Descricao</Label>
               <Input id="title" placeholder="Ex.: Mercado da semana" {...form.register("title")} />
               <FieldError message={form.formState.errors.title?.message} />
             </Field>
@@ -216,14 +229,43 @@ export function ExpenseForm({
               <Label htmlFor="paymentMethod">Pagamento</Label>
               <Input
                 id="paymentMethod"
-                placeholder="Pix, débito, boleto..."
+                placeholder="Pix, debito, boleto..."
                 {...form.register("paymentMethod")}
               />
               <FieldError message={form.formState.errors.paymentMethod?.message} />
             </Field>
             <Field>
+              <Label>Controle de vencimento</Label>
+              <Controller
+                control={form.control}
+                name="hasDueDate"
+                render={({ field }) => (
+                  <Select
+                    value={field.value ? "with-due-date" : "without-due-date"}
+                    onValueChange={(value) => field.onChange(value === "with-due-date")}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o tipo de vencimento" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="with-due-date">Definir data de vencimento</SelectItem>
+                      <SelectItem value="without-due-date">Despesa sem vencimento</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </Field>
+            <Field>
               <Label htmlFor="dueDate">Data de vencimento</Label>
-              <Input id="dueDate" type="date" {...form.register("dueDate")} />
+              <Input
+                id="dueDate"
+                type="date"
+                disabled={!hasDueDate}
+                {...form.register("dueDate")}
+              />
+              <p className="text-xs leading-5 text-muted-foreground">
+                Use o vencimento quando quiser acompanhar prazo. Se nao houver prazo, a despesa fica sem vencimento.
+              </p>
               <FieldError message={form.formState.errors.dueDate?.message} />
             </Field>
             <Field>
@@ -247,7 +289,7 @@ export function ExpenseForm({
               <FieldError message={form.formState.errors.status?.message} />
             </Field>
             <Field className="md:col-span-2">
-              <Label htmlFor="paidAmount">Valor já pago</Label>
+              <Label htmlFor="paidAmount">Valor ja pago</Label>
               <Input
                 id="paidAmount"
                 type="number"
@@ -258,15 +300,15 @@ export function ExpenseForm({
                 {...form.register("paidAmount", { valueAsNumber: true })}
               />
               <p className="text-xs leading-5 text-muted-foreground">
-                Use este campo quando a conta já tiver sido paga parcialmente.
+                Use este campo quando a conta ja tiver sido paga parcialmente.
               </p>
               <FieldError message={form.formState.errors.paidAmount?.message} />
             </Field>
             <Field className="md:col-span-2">
-              <Label htmlFor="notes">Observações</Label>
+              <Label htmlFor="notes">Observacoes</Label>
               <Textarea
                 id="notes"
-                placeholder="Contexto adicional, recorrência, meta ou lembrete."
+                placeholder="Contexto adicional, recorrencia, meta ou lembrete."
                 {...form.register("notes")}
               />
               <FieldError message={form.formState.errors.notes?.message} />
@@ -277,7 +319,7 @@ export function ExpenseForm({
               {isSubmitting
                 ? "Salvando..."
                 : initialValues?.id
-                  ? "Salvar alterações"
+                  ? "Salvar alteracoes"
                   : "Salvar despesa"}
             </Button>
             <Button type="button" variant="outline" onClick={() => form.reset()}>

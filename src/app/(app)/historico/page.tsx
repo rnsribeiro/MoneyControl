@@ -1,8 +1,6 @@
 import Link from "next/link";
-import { ExpenseStatusBadge } from "@/components/expenses/expense-status-badge";
+import { HistoryEntryRow } from "@/components/history/history-entry-row";
 import { HistoryFilter } from "@/components/history/history-filter";
-import { HistoryTypeBadge } from "@/components/history/history-type-badge";
-import { IncomeStatusBadge } from "@/components/incomes/income-status-badge";
 import { EmptyState } from "@/components/shared/empty-state";
 import { PageHeader } from "@/components/shared/page-header";
 import { buttonVariants } from "@/components/ui/button";
@@ -10,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
-  TableCell,
   TableHead,
   TableHeader,
   TableRow,
@@ -21,7 +18,6 @@ import {
 } from "@/lib/services/history.service";
 import type { HistoryEntry } from "@/types/finance";
 import { formatCurrency } from "@/utils/currency";
-import { formatDate } from "@/utils/date";
 
 interface HistoryPageProps {
   searchParams?: Promise<{
@@ -44,10 +40,16 @@ export default async function HistoryPage({ searchParams }: HistoryPageProps) {
         description="Consulte todos os lançamentos do sistema em um só lugar, com filtro por tipo, intervalo de datas e busca por termo."
         actions={
           <>
-            <Link href="/despesas/nova" className={buttonVariants({ variant: "outline", size: "sm" })}>
+            <Link
+              href="/despesas/nova"
+              className={buttonVariants({ variant: "outline", size: "sm" })}
+            >
               Nova despesa
             </Link>
-            <Link href="/receitas/nova" className={buttonVariants({ variant: "outline", size: "sm" })}>
+            <Link
+              href="/receitas/nova"
+              className={buttonVariants({ variant: "outline", size: "sm" })}
+            >
               Nova receita
             </Link>
             <Link href="/investimentos/novo" className={buttonVariants({ size: "sm" })}>
@@ -90,34 +92,11 @@ export default async function HistoryPage({ searchParams }: HistoryPageProps) {
               </TableHeader>
               <TableBody>
                 {entries.map((entry) => (
-                  <TableRow key={`${entry.type}-${entry.id}`}>
-                    <TableCell className="min-w-[220px]">
-                      <div className="space-y-1">
-                        <p className="font-medium text-foreground">{entry.title}</p>
-                        <p className="text-xs text-muted-foreground">{entry.secondaryLabel}</p>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <HistoryTypeBadge type={entry.type} />
-                    </TableCell>
-                    <TableCell className="capitalize">{entry.category}</TableCell>
-                    <TableCell>{renderStatusBadge(entry)}</TableCell>
-                    <TableCell>{formatDate(entry.date)}</TableCell>
-                    <TableCell className="max-w-[280px] text-sm text-muted-foreground">
-                      {entry.notes || "Sem observações."}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Link
-                        href={getHistoryEditHref(entry)}
-                        className={buttonVariants({ variant: "ghost", size: "sm" })}
-                      >
-                        Abrir
-                      </Link>
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap text-right font-medium">
-                      {formatCurrency(entry.amount)}
-                    </TableCell>
-                  </TableRow>
+                  <HistoryEntryRow
+                    key={`${entry.type}-${entry.id}`}
+                    entry={entry}
+                    href={getHistoryEditHref(entry)}
+                  />
                 ))}
               </TableBody>
             </Table>
@@ -133,27 +112,6 @@ export default async function HistoryPage({ searchParams }: HistoryPageProps) {
       )}
     </div>
   );
-}
-
-function renderStatusBadge(entry: HistoryEntry) {
-  if (entry.type === "expense") {
-    const status =
-      entry.status === "Pago"
-        ? "paid"
-        : entry.status === "Vencida"
-          ? "overdue"
-          : entry.status === "Parcial"
-            ? "partial"
-            : "pending";
-
-    return <ExpenseStatusBadge status={status} />;
-  }
-
-  if (entry.type === "income") {
-    return <IncomeStatusBadge status={entry.status === "Recebido" ? "received" : "expected"} />;
-  }
-
-  return <span className="text-sm font-medium text-muted-foreground">{entry.status}</span>;
 }
 
 function getHistoryEditHref(entry: HistoryEntry) {

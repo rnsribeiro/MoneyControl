@@ -7,8 +7,8 @@ export interface MoneyControlExpenseInsert {
   payment_method: string;
   status: "paid" | "pending" | "partial";
   expense_date: string;
-  due_date: string;
-  paid_at?: string;
+  due_date?: string | null;
+  paid_at?: string | null;
   notes?: string;
 }
 
@@ -40,6 +40,6 @@ export interface MoneyControlGoalInsert {
   title: string;
   target_amount: number;
   current_amount: number;
-  target_date?: string;
+  target_date?: string | null;
   notes?: string;
 }

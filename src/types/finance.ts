@@ -12,7 +12,7 @@ export interface Expense {
   progressPercentage: number;
   category: string;
   date: string;
-  dueDate: string;
+  dueDate?: string;
   paidAt?: string;
   paymentMethod: string;
   status: ExpenseStatus;

@@ -14,7 +14,7 @@ export function mapExpenseRow(row: {
   status: "paid" | "pending" | "partial";
   notes?: string | null;
 }): Expense {
-  const dueDate = row.due_date ?? row.expense_date;
+  const dueDate = row.due_date ?? undefined;
   const amount = Number(row.amount);
   const paidAmount = clampCurrency(Number(row.paid_amount ?? 0), amount);
   const remainingAmount = clampCurrency(amount - paidAmount);
@@ -22,7 +22,9 @@ export function mapExpenseRow(row: {
   const baseStatus =
     paidAmount >= amount ? "paid" : paidAmount > 0 ? "partial" : row.status;
   const isOverdue =
-    remainingAmount > 0 && compareDateOnly(dueDate, getLocalDateInputValue()) < 0;
+    dueDate
+      ? remainingAmount > 0 && compareDateOnly(dueDate, getLocalDateInputValue()) < 0
+      : false;
 
   return {
     id: row.id,
@@ -32,8 +34,8 @@ export function mapExpenseRow(row: {
     remainingAmount,
     progressPercentage,
     category: row.category_name,
-    date: dueDate,
-    dueDate,
+    date: row.expense_date,
+    dueDate: dueDate,
     paidAt: row.paid_at ?? undefined,
     paymentMethod: row.payment_method,
     status: isOverdue ? "overdue" : baseStatus,

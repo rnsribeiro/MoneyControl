@@ -15,7 +15,7 @@ data class ExpenseRecord(
     @SerialName("expense_date")
     val expenseDate: String,
     @SerialName("due_date")
-    val dueDate: String,
+    val dueDate: String? = null,
     @SerialName("paid_at")
     val paidAt: String? = null,
     @SerialName("payment_method")
@@ -194,7 +194,7 @@ data class ExpenseMutation(
     @SerialName("expense_date")
     val expenseDate: String,
     @SerialName("due_date")
-    val dueDate: String,
+    val dueDate: String? = null,
     @SerialName("paid_at")
     val paidAt: String? = null,
     val notes: String? = null,
@@ -216,7 +216,7 @@ data class ExpenseInsert(
     @SerialName("expense_date")
     val expenseDate: String,
     @SerialName("due_date")
-    val dueDate: String,
+    val dueDate: String? = null,
     @SerialName("paid_at")
     val paidAt: String? = null,
     val notes: String? = null,

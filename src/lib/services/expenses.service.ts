@@ -107,7 +107,7 @@ export function getExpenseOverview(expenses: Expense[]): ExpenseOverview {
 
   return expenses.reduce<ExpenseOverview>(
     (acc, expense) => {
-      const dueDate = parseDateOnly(expense.dueDate);
+      const referenceDate = expense.dueDate ? parseDateOnly(expense.dueDate) : null;
       const paidDate = expense.paidAt ? parseDateOnly(expense.paidAt) : null;
 
       if (
@@ -121,8 +121,9 @@ export function getExpenseOverview(expenses: Expense[]): ExpenseOverview {
 
       if (
         expense.remainingAmount > 0 &&
-        dueDate.getMonth() === currentMonth &&
-        dueDate.getFullYear() === currentYear
+        referenceDate &&
+        referenceDate.getMonth() === currentMonth &&
+        referenceDate.getFullYear() === currentYear
       ) {
         acc.pendingThisMonth += expense.remainingAmount;
       }
@@ -168,11 +169,13 @@ function matchesExpenseFilters(expense: Expense, filters: ExpenseFilters) {
     return false;
   }
 
-  if (filters.startDate && compareDateOnly(expense.dueDate, filters.startDate) < 0) {
+  const referenceDate = expense.dueDate ?? expense.date;
+
+  if (filters.startDate && compareDateOnly(referenceDate, filters.startDate) < 0) {
     return false;
   }
 
-  if (filters.endDate && compareDateOnly(expense.dueDate, filters.endDate) > 0) {
+  if (filters.endDate && compareDateOnly(referenceDate, filters.endDate) > 0) {
     return false;
   }
 

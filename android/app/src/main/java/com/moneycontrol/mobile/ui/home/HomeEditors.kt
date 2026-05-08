@@ -234,6 +234,7 @@ fun ExpenseEditorDialog(
         mutableStateOf(initial?.categoryName ?: categories.firstOrNull()?.name.orEmpty())
     }
     var paymentMethod by remember(initial) { mutableStateOf(initial?.paymentMethod.orEmpty()) }
+    var hasDueDate by remember(initial) { mutableStateOf(initial?.dueDate != null) }
     var dueDate by remember(initial) { mutableStateOf(initial?.dueDate ?: today()) }
     var status by remember(initial) {
         mutableStateOf(
@@ -260,7 +261,7 @@ fun ExpenseEditorDialog(
                 parsedAmount == null || parsedAmount <= 0.0 -> error = "Informe um valor maior que zero."
                 category.isBlank() -> error = "Selecione uma categoria."
                 paymentMethod.trim().isBlank() -> error = "Informe a forma de pagamento."
-                dueDate.isBlank() -> error = "Informe a data de vencimento."
+                hasDueDate && dueDate.isBlank() -> error = "Informe a data de vencimento."
                 status == "partial" && (parsedPaidAmount <= 0.0 || parsedPaidAmount >= parsedAmount) -> {
                     error = "No status parcial, use um valor pago maior que zero e menor que o total."
                 }
@@ -279,9 +280,9 @@ fun ExpenseEditorDialog(
                             categoryName = category,
                             paymentMethod = paymentMethod.trim(),
                             status = status,
-                            expenseDate = dueDate,
-                            dueDate = dueDate,
-                            paidAt = if (normalizedPaidAmount > 0) dueDate else null,
+                            expenseDate = initial?.expenseDate ?: dueDate.takeIf { hasDueDate } ?: today(),
+                            dueDate = dueDate.takeIf { hasDueDate },
+                            paidAt = if (normalizedPaidAmount > 0) (dueDate.takeIf { hasDueDate } ?: initial?.expenseDate ?: today()) else null,
                             notes = notes.trim().ifBlank { null },
                         ),
                     )
@@ -323,11 +324,29 @@ fun ExpenseEditorDialog(
             label = "Pagamento",
             placeholder = "Pix, debito, boleto...",
         )
+        OptionSelector(
+            label = "Controle de vencimento",
+            selectedValue = if (hasDueDate) "with-date" else "without-date",
+            options = listOf(
+                "with-date" to "Definir data de vencimento",
+                "without-date" to "Despesa sem vencimento",
+            ),
+            onSelected = {
+                hasDueDate = it == "with-date"
+                if (!hasDueDate) {
+                    dueDate = ""
+                } else if (dueDate.isBlank()) {
+                    dueDate = today()
+                }
+                error = null
+            },
+        )
         EditorTextField(
             value = dueDate,
             onValueChange = { dueDate = it; error = null },
             label = "Data de vencimento",
             placeholder = "2026-05-07",
+            enabled = hasDueDate,
         )
         OptionSelector(
             label = "Status",
@@ -551,6 +570,7 @@ fun GoalEditorDialog(
     var title by remember(initial) { mutableStateOf(initial?.title.orEmpty()) }
     var targetAmount by remember(initial) { mutableStateOf(initial?.targetAmount?.toString().orEmpty()) }
     var currentAmount by remember(initial) { mutableStateOf(initial?.currentAmount?.toString().orEmpty()) }
+    var hasTargetDate by remember(initial) { mutableStateOf(initial?.targetDate != null) }
     var targetDate by remember(initial) { mutableStateOf(initial?.targetDate.orEmpty()) }
     var notes by remember(initial) { mutableStateOf(initial?.notes.orEmpty()) }
     var error by remember { mutableStateOf<String?>(null) }
@@ -567,12 +587,13 @@ fun GoalEditorDialog(
                 parsedTargetAmount == null || parsedTargetAmount <= 0.0 -> error = "Informe um valor-alvo maior que zero."
                 parsedCurrentAmount < 0.0 -> error = "O valor reservado nao pode ser negativo."
                 parsedCurrentAmount > parsedTargetAmount -> error = "O valor reservado nao pode ser maior que o alvo."
+                hasTargetDate && targetDate.isBlank() -> error = "Informe a data limite da meta."
                 else -> onSave(
                     GoalMutation(
                         title = title.trim(),
                         targetAmount = parsedTargetAmount,
                         currentAmount = parsedCurrentAmount,
-                        targetDate = targetDate.trim().ifBlank { null },
+                        targetDate = if (hasTargetDate) targetDate.trim().ifBlank { null } else null,
                         notes = notes.trim().ifBlank { null },
                     ),
                 )
@@ -594,11 +615,27 @@ fun GoalEditorDialog(
             placeholder = "0.00",
             keyboardType = KeyboardType.Decimal,
         )
+        OptionSelector(
+            label = "Prazo da meta",
+            selectedValue = if (hasTargetDate) "with-date" else "without-date",
+            options = listOf(
+                "with-date" to "Definir data limite",
+                "without-date" to "Meta sem data limite",
+            ),
+            onSelected = {
+                hasTargetDate = it == "with-date"
+                if (!hasTargetDate) {
+                    targetDate = ""
+                }
+                error = null
+            },
+        )
         EditorTextField(
             value = targetDate,
             onValueChange = { targetDate = it; error = null },
             label = "Data limite",
             placeholder = "2026-12-31",
+            enabled = hasTargetDate,
         )
         EditorTextField(
             value = notes,

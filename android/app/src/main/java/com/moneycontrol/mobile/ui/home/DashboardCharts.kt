@@ -287,7 +287,7 @@ fun buildTrendPoints(
 
     val allDates = buildList {
         incomes.mapNotNullTo(this) { parseDate(incomeChartDate(it)) }
-        expenses.mapNotNullTo(this) { parseDate(it.dueDate) }
+        expenses.mapNotNullTo(this) { parseDate(it.dueDate ?: it.expenseDate) }
         investments.mapNotNullTo(this) { parseDate(it.investmentDate) }
     }.sorted()
 
@@ -315,7 +315,7 @@ fun buildTrendPoints(
         monthMap[key] = point.copy(income = point.income + income.amount)
     }
     expenses.forEach { expense ->
-        val parsed = parseDate(expense.dueDate)?.withDayOfMonth(1) ?: return@forEach
+        val parsed = parseDate(expense.dueDate ?: expense.expenseDate)?.withDayOfMonth(1) ?: return@forEach
         val key = parsed.toString()
         val point = monthMap[key] ?: return@forEach
         monthMap[key] = point.copy(expense = point.expense + expense.amount)

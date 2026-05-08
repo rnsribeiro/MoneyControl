@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { MC_TABLES } from "@/lib/supabase/tables";
@@ -17,6 +17,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
 export function GoalForm({
@@ -39,17 +46,26 @@ export function GoalForm({
       title: initialValues?.title ?? "",
       targetAmount: initialValues?.targetAmount ?? 0,
       currentAmount: initialValues?.currentAmount ?? 0,
+      hasTargetDate: Boolean(initialValues?.targetDate),
       targetDate: initialValues?.targetDate ?? "",
       notes: initialValues?.notes ?? "",
     },
   });
+
+  const hasTargetDate = useWatch({ control: form.control, name: "hasTargetDate" });
+
+  useEffect(() => {
+    if (!hasTargetDate) {
+      form.setValue("targetDate", "", { shouldValidate: true });
+    }
+  }, [form, hasTargetDate]);
 
   async function onSubmit(values: GoalFormValues) {
     setIsSubmitting(true);
     const supabase = createSupabaseBrowserClient();
 
     if (!supabase) {
-      toast.error("Supabase não configurado.");
+      toast.error("Supabase nao configurado.");
       setIsSubmitting(false);
       return;
     }
@@ -59,8 +75,8 @@ export function GoalForm({
     } = await supabase.auth.getUser();
 
     if (!user) {
-      toast.error("Sessão não encontrada.", {
-        description: "Faça login para salvar suas metas.",
+      toast.error("Sessao nao encontrada.", {
+        description: "Faca login para salvar suas metas.",
       });
       setIsSubmitting(false);
       return;
@@ -71,7 +87,7 @@ export function GoalForm({
       title: values.title,
       target_amount: values.targetAmount,
       current_amount: values.currentAmount,
-      target_date: values.targetDate || undefined,
+      target_date: values.hasTargetDate ? values.targetDate || null : null,
       notes: values.notes,
     };
 
@@ -80,7 +96,7 @@ export function GoalForm({
       : await supabase.from(MC_TABLES.goals).insert(payload);
 
     if (error) {
-      toast.error("Não foi possível salvar a meta.", {
+      toast.error("Nao foi possivel salvar a meta.", {
         description: error.message,
       });
       setIsSubmitting(false);
@@ -105,11 +121,7 @@ export function GoalForm({
           <div className="grid gap-5 md:grid-cols-2">
             <Field className="md:col-span-2">
               <Label htmlFor="title">Nome da meta</Label>
-              <Input
-                id="title"
-                placeholder="Ex.: Comprar um carro"
-                {...form.register("title")}
-              />
+              <Input id="title" placeholder="Ex.: Comprar um carro" {...form.register("title")} />
               <FieldError message={form.formState.errors.title?.message} />
             </Field>
             <Field>
@@ -125,7 +137,7 @@ export function GoalForm({
               <FieldError message={form.formState.errors.targetAmount?.message} />
             </Field>
             <Field>
-              <Label htmlFor="currentAmount">Valor já reservado</Label>
+              <Label htmlFor="currentAmount">Valor ja reservado</Label>
               <Input
                 id="currentAmount"
                 type="number"
@@ -136,19 +148,45 @@ export function GoalForm({
               />
               <FieldError message={form.formState.errors.currentAmount?.message} />
             </Field>
-            <Field className="md:col-span-2">
+            <Field>
+              <Label>Prazo da meta</Label>
+              <Controller
+                control={form.control}
+                name="hasTargetDate"
+                render={({ field }) => (
+                  <Select
+                    value={field.value ? "with-date" : "without-date"}
+                    onValueChange={(value) => field.onChange(value === "with-date")}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o tipo de prazo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="with-date">Definir data limite</SelectItem>
+                      <SelectItem value="without-date">Meta sem data limite</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </Field>
+            <Field>
               <Label htmlFor="targetDate">Data limite</Label>
-              <Input id="targetDate" type="date" {...form.register("targetDate")} />
+              <Input
+                id="targetDate"
+                type="date"
+                disabled={!hasTargetDate}
+                {...form.register("targetDate")}
+              />
               <p className="text-xs leading-5 text-muted-foreground">
-                Esse campo é opcional. Use quando quiser acompanhar também o prazo da meta.
+                Escolha um prazo quando quiser acompanhar tambem a data desejada para concluir a meta.
               </p>
               <FieldError message={form.formState.errors.targetDate?.message} />
             </Field>
             <Field className="md:col-span-2">
-              <Label htmlFor="notes">Observações</Label>
+              <Label htmlFor="notes">Observacoes</Label>
               <Textarea
                 id="notes"
-                placeholder="Detalhes do objetivo, estratégia ou lembretes."
+                placeholder="Detalhes do objetivo, estrategia ou lembretes."
                 {...form.register("notes")}
               />
               <FieldError message={form.formState.errors.notes?.message} />
@@ -159,7 +197,7 @@ export function GoalForm({
               {isSubmitting
                 ? "Salvando..."
                 : initialValues?.id
-                  ? "Salvar alterações"
+                  ? "Salvar alteracoes"
                   : "Salvar meta"}
             </Button>
             <Button type="button" variant="outline" onClick={() => form.reset()}>
